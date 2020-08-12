@@ -1,41 +1,51 @@
 package pl.cekus.antologicproject.model;
 
-import javax.persistence.Entity;
-import javax.persistence.GeneratedValue;
-import javax.persistence.GenerationType;
-import javax.persistence.Id;
-import javax.validation.constraints.*;
+import javax.persistence.*;
+import java.util.HashSet;
+import java.util.Set;
 
-@Entity(name = "users")
+@Entity
+@Table(name = "users")
 public class User {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @Column(name = "id")
     private Long id;
-    @NotBlank
+
+    @Column(name = "login", nullable = false, unique = true)
     private String login;
-    @NotBlank
+
+    @Column(name = "first_name", nullable = false)
     private String firstName;
-    @NotBlank
+
+    @Column(name = "last_name", nullable = false, unique = true)
     private String lastName;
-    @NotNull
+
+    @Enumerated(value = EnumType.STRING)
+    @Column(name = "role", nullable = false)
     private Role role;
-    @NotBlank
-    @Size(min = 6, message = "password must have at least 6 characters")
+
+    @Column(name = "password", nullable = false)
     private String password;
-    @Email(message = "incorrect email format")
+
+    @Column(name = "email", length = 254, nullable = false)
     private String email;
-    @Positive(message = "cost per hour must be greater than zero")
+
+    @Column(name = "cost_per_hour", nullable = false)
     private Double costPerHour;
+
+    @ManyToMany(targetEntity = Project.class, cascade = CascadeType.ALL)
+    private Set<Project> projects = new HashSet<>();
 
     public User() {
     }
 
-    public User(String login, String firstName, String lastName, String role, String password, String email, Double costPerHour) {
+    public User(String login, String firstName, String lastName, Role role, String password, String email, Double costPerHour) {
         this.login = login;
         this.firstName = firstName;
         this.lastName = lastName;
-        this.role = Role.valueOf(role.toUpperCase());
+        this.role = role;
         this.password = password;
         this.email = email;
         this.costPerHour = costPerHour;
@@ -69,12 +79,12 @@ public class User {
         this.lastName = lastName;
     }
 
-    public String getRole() {
-        return role.toString();
+    public Role getRole() {
+        return role;
     }
 
-    public void setRole(String role) {
-        this.role = Role.valueOf(role.toUpperCase());
+    public void setRole(Role role) {
+        this.role = role;
     }
 
     public String getPassword() {
@@ -99,5 +109,13 @@ public class User {
 
     public void setCostPerHour(Double costPerHour) {
         this.costPerHour = costPerHour;
+    }
+
+    public Set<Project> getProjects() {
+        return projects;
+    }
+
+    public void setProjects(Set<Project> projects) {
+        this.projects = projects;
     }
 }

@@ -2,87 +2,91 @@ package pl.cekus.antologicproject.service;
 
 import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
+import pl.cekus.antologicproject.dto.UserDto;
+import pl.cekus.antologicproject.form.UserCreateForm;
+import pl.cekus.antologicproject.form.UserFilterForm;
 import pl.cekus.antologicproject.model.Role;
 import pl.cekus.antologicproject.model.User;
 import pl.cekus.antologicproject.repository.UserRepository;
+import pl.cekus.antologicproject.specification.UserSpecification;
 
-import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
 
 @Service
 public class UserService {
 
-    public static final String MIN_COST_PER_HOUR = "0.01";
-    public static final String MAX_COST_PER_HOUR = "1000.00";
-
-    private UserRepository userRepository;
+    private final UserRepository userRepository;
 
     UserService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    public User createUser(User user) {
-        if (userRepository.findByLogin(user.getLogin()) == null) {
-            return userRepository.save(user);
+    public UserDto createUser(UserCreateForm userCreateForm) {
+        if (userRepository.findByLogin(userCreateForm.getLogin()) == null) {
+            User toCreate = mapCreateFormToUser(userCreateForm);
+            return mapUserToUserDto(userRepository.save(toCreate));
         }
-        return userRepository.findByLogin(user.getLogin());
-    }
-
-    public List<User> readUsers() {
-        return userRepository.findAll();
+        return mapUserToUserDto(userRepository.findByLogin(userCreateForm.getLogin()));
     }
 
     public Optional<User> readUserById(Long id) {
         return userRepository.findById(id);
     }
 
-    public void updateUser(Long id, User user) {
-        Optional<User> toUpdate = userRepository.findById(id);
+    public Page<UserDto> readUsers(UserFilterForm filterForm, Pageable pageable) {
+        Specification<User> specs = Objects.requireNonNull(UserSpecification.loginLike(filterForm.getLogin())
+                .and(UserSpecification.firstNameLike(filterForm.getFirstName())))
+                .and(UserSpecification.lastNameLike(filterForm.getLastName()))
+                .and(UserSpecification.roleEqual(filterForm.getRole()))
+                .and(UserSpecification.emailLike(filterForm.getEmail()))
+                .and(UserSpecification.passwordLike(filterForm.getPassword()))
+                .and(UserSpecification.minimumCost(filterForm.getMinCost()))
+                .and(UserSpecification.maximumCost(filterForm.getMaxCost()));
+        return userRepository.findAll(specs, pageable)
+                .map(this::mapUserToUserDto);
+    }
 
-        toUpdate.ifPresent(updatedUser -> {
-            updatedUser.setLogin(user.getLogin());
-            updatedUser.setFirstName(user.getFirstName());
-            updatedUser.setLastName(user.getLastName());
-            updatedUser.setRole(user.getRole());
-            updatedUser.setPassword(user.getPassword());
-            updatedUser.setEmail(user.getEmail());
-            updatedUser.setCostPerHour(user.getCostPerHour());
-            userRepository.save(updatedUser);
-        });
+    public void updateUser(Long id, UserCreateForm userCreateForm) {
+        Optional<User> toUpdate = userRepository.findById(id);
+        toUpdate.ifPresent(user -> setValuesToUpdatingUser(user, userCreateForm));
     }
 
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
     }
 
-    public List<User> readUsersWithFilters(String login, String firstName,
-                                           String lastName, String minCost, String maxCost, String role) {
-        double min;
-        double max;
-        Role userRole = Role.valueOf(role.toUpperCase());
-
-        try {
-            min = Double.parseDouble(minCost);
-            max = Double.parseDouble(maxCost);
-        } catch (NumberFormatException e) {
-            min = Double.parseDouble(MIN_COST_PER_HOUR);
-            max = Double.parseDouble(MAX_COST_PER_HOUR);
-            System.err.println("an incorrect cost per hour value was entered");
-        }
-
-        return userRepository.findUsersWithFilters(login, firstName, lastName, min, max, userRole);
+    private void setValuesToUpdatingUser(User toUpdate, UserCreateForm createForm) {
+        toUpdate.setLogin(createForm.getLogin());
+        toUpdate.setFirstName(createForm.getFirstName());
+        toUpdate.setLastName(createForm.getLastName());
+        toUpdate.setRole(mapStringToRole(createForm.getRole()));
+        toUpdate.setPassword(createForm.getPassword());
+        toUpdate.setEmail(createForm.getEmail());
+        toUpdate.setCostPerHour(createForm.getCostPerHour());
     }
 
-    // TODO use UserFiltersForm instead of request parameters
-//    public List<User> readUsersWithFilters(UserFiltersForm filtersForm) {
-//        return userRepository.findUsersWithFilters(filtersForm.getLogin(), filtersForm.getFirstName(),
-//                filtersForm.getLastName(), filtersForm.getMinCost(), filtersForm.getMaxCost(), filtersForm.getRole());
-//    }
+    private User mapCreateFormToUser(UserCreateForm createForm) {
+        return new User(createForm.getLogin(), createForm.getFirstName(), createForm.getLastName(),
+                mapStringToRole(createForm.getRole()), createForm.getPassword(), createForm.getEmail(), createForm.getCostPerHour());
+    }
+
+    private UserDto mapUserToUserDto(User user) {
+        return new UserDto(user.getLogin(), user.getFirstName(), user.getLastName(),
+                user.getRole(), user.getEmail(), user.getCostPerHour());
+    }
+
+    private Role mapStringToRole(String role) {
+        return Role.valueOf(role.toUpperCase());
+    }
 
     @EventListener(ApplicationReadyEvent.class)
     public void createTestUser() {
-        createUser(new User("admin", "jan", "kowalski",
+        createUser(new UserCreateForm("admin", "jan", "kowalski",
                 "admin", "1qaz2wsx", "jankowalski@email.com", 28.75));
     }
 }
