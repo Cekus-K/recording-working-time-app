@@ -35,13 +35,11 @@ class UserController extends ResponseEntityExceptionHandler {
                                             @RequestParam(name = "firstName", required = false) String firstName,
                                             @RequestParam(name = "lastName", required = false) String lastName,
                                             @RequestParam(name = "role", required = false) String role,
-                                            @RequestParam(name = "password", required = false) String password,
-                                            @RequestParam(name = "email", required = false) String email,
                                             @RequestParam(name = "minCost", required = false) double minCost,
                                             @RequestParam(name = "maxCost", required = false) double maxCost,
                                             Pageable pageable) {
         return ResponseEntity.ok().body(userService.readUsers(new UserFilterForm(login, firstName,
-                lastName, role, password, email, minCost, maxCost), pageable));
+                lastName, role, minCost, maxCost), pageable));
     }
 
     @PutMapping("/user/{id}")

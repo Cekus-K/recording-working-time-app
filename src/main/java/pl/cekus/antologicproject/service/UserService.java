@@ -43,8 +43,6 @@ public class UserService {
                 .and(UserSpecification.firstNameLike(filterForm.getFirstName())))
                 .and(UserSpecification.lastNameLike(filterForm.getLastName()))
                 .and(UserSpecification.roleEqual(filterForm.getRole()))
-                .and(UserSpecification.emailLike(filterForm.getEmail()))
-                .and(UserSpecification.passwordLike(filterForm.getPassword()))
                 .and(UserSpecification.minimumCost(filterForm.getMinCost()))
                 .and(UserSpecification.maximumCost(filterForm.getMaxCost()));
         return userRepository.findAll(specs, pageable)
