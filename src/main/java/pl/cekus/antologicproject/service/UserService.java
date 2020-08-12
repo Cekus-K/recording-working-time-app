@@ -4,7 +4,6 @@ import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.data.jpa.domain.Specification;
 import org.springframework.stereotype.Service;
 import pl.cekus.antologicproject.dto.UserDto;
 import pl.cekus.antologicproject.form.UserCreateForm;
@@ -14,7 +13,6 @@ import pl.cekus.antologicproject.model.User;
 import pl.cekus.antologicproject.repository.UserRepository;
 import pl.cekus.antologicproject.specification.UserSpecification;
 
-import java.util.Objects;
 import java.util.Optional;
 
 @Service
@@ -39,13 +37,8 @@ public class UserService {
     }
 
     public Page<UserDto> readUsers(UserFilterForm filterForm, Pageable pageable) {
-        Specification<User> specs = Objects.requireNonNull(UserSpecification.loginLike(filterForm.getLogin())
-                .and(UserSpecification.firstNameLike(filterForm.getFirstName())))
-                .and(UserSpecification.lastNameLike(filterForm.getLastName()))
-                .and(UserSpecification.roleEqual(filterForm.getRole()))
-                .and(UserSpecification.minimumCost(filterForm.getMinCost()))
-                .and(UserSpecification.maximumCost(filterForm.getMaxCost()));
-        return userRepository.findAll(specs, pageable)
+        UserSpecification specification = new UserSpecification(filterForm);
+        return userRepository.findAll(specification, pageable)
                 .map(this::mapUserToUserDto);
     }
 

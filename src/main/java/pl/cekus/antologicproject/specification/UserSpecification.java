@@ -1,70 +1,59 @@
 package pl.cekus.antologicproject.specification;
 
 import org.springframework.data.jpa.domain.Specification;
+import pl.cekus.antologicproject.form.UserFilterForm;
 import pl.cekus.antologicproject.model.Role;
 import pl.cekus.antologicproject.model.User;
 
-public class UserSpecification {
+import javax.persistence.criteria.CriteriaBuilder;
+import javax.persistence.criteria.CriteriaQuery;
+import javax.persistence.criteria.Predicate;
+import javax.persistence.criteria.Root;
+import java.util.ArrayList;
+import java.util.List;
 
-    public static Specification<User> loginLike(String login) {
-        if (login == null) {
-            return null;
-        }
-        return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("login"), "%" + login + "%");
+public class UserSpecification implements Specification<User> {
+
+    private UserFilterForm userFilterForm;
+
+    public UserSpecification(UserFilterForm userFilterForm) {
+        this.userFilterForm = userFilterForm;
     }
 
-    public static Specification<User> firstNameLike(String firstName) {
-        if (firstName == null) {
-            return null;
-        }
-        return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("firstName"), "%" + firstName + "%");
-    }
+    @Override
+    public Predicate toPredicate(Root<User> root, CriteriaQuery<?> cq, CriteriaBuilder cb) {
+        List<Predicate> predicates = new ArrayList<>();
 
-    public static Specification<User> lastNameLike(String lastName) {
-        if (lastName == null) {
-            return null;
+        if (userFilterForm.getLogin() != null) {
+            predicates.add(cb.like(root.get("login"), "%" + userFilterForm.getLogin() + "%"));
         }
-        return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("lastName"), "%" + lastName + "%");
-    }
 
-    public static Specification<User> roleEqual(String role) {
-        if (role == null) {
-            return null;
+        if (userFilterForm.getFirstName() != null) {
+            predicates.add(cb.like(root.get("firstName"), "%" + userFilterForm.getFirstName() + "%"));
         }
-        try {
-            Role userRole = Role.valueOf(role.toUpperCase());
-            return (root, query, criteriaBuilder) -> criteriaBuilder.equal(root.get("role"), userRole);
-        } catch (IllegalArgumentException e) {
-            System.err.println("an invalid user role was provided");
-            return null;
-        }
-    }
 
-    public static Specification<User> passwordLike(String password) {
-        if (password == null) {
-            return null;
+        if (userFilterForm.getLastName() != null) {
+            predicates.add(cb.like(root.get("lastName"), "%" + userFilterForm.getLastName() + "%"));
         }
-        return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("password"), "%" + password + "%");
-    }
 
-    public static Specification<User> emailLike(String email) {
-        if (email == null) {
-            return null;
+        if (userFilterForm.getRole() != null) {
+            try {
+                Role userRole = Role.valueOf(userFilterForm.getRole().toUpperCase());
+                predicates.add(cb.equal(root.get("role"), userRole));
+            } catch (IllegalArgumentException e) {
+                System.err.println("an invalid user role was provided");
+            }
         }
-        return (root, query, criteriaBuilder) -> criteriaBuilder.like(root.get("email"), "%" + email + "%");
-    }
 
-    public static Specification<User> minimumCost(Double minCost) {
-        if (minCost == null) {
-            return null;
+        if (userFilterForm.getMinCost() != null) {
+            predicates.add(cb.greaterThanOrEqualTo(root.get("costPerHour"), userFilterForm.getMinCost()));
         }
-        return (root, query, criteriaBuilder) -> criteriaBuilder.greaterThanOrEqualTo(root.get("costPerHour"), minCost);
-    }
 
-    public static Specification<User> maximumCost(Double maxCost) {
-        if (maxCost == null) {
-            return null;
+        if (userFilterForm.getMaxCost() != null) {
+            predicates.add(cb.lessThanOrEqualTo(root.get("costPerHour"), userFilterForm.getMaxCost()));
         }
-        return (root, query, criteriaBuilder) -> criteriaBuilder.lessThanOrEqualTo(root.get("costPerHour"), maxCost);
+
+        return cq.where(cb.and(predicates.toArray(new Predicate[0])))
+                .distinct(true).orderBy(cb.desc(root.get("id"))).getRestriction();
     }
 }

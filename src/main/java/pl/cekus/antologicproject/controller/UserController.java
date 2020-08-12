@@ -31,15 +31,8 @@ class UserController extends ResponseEntityExceptionHandler {
     }
 
     @GetMapping("/users")
-    ResponseEntity<Page<UserDto>> readUsers(@RequestParam(name = "login", defaultValue = "") String login,
-                                            @RequestParam(name = "firstName", required = false) String firstName,
-                                            @RequestParam(name = "lastName", required = false) String lastName,
-                                            @RequestParam(name = "role", required = false) String role,
-                                            @RequestParam(name = "minCost", required = false) double minCost,
-                                            @RequestParam(name = "maxCost", required = false) double maxCost,
-                                            Pageable pageable) {
-        return ResponseEntity.ok().body(userService.readUsers(new UserFilterForm(login, firstName,
-                lastName, role, minCost, maxCost), pageable));
+    ResponseEntity<Page<UserDto>> readUsers(UserFilterForm userFilterForm, Pageable pageable) {
+        return ResponseEntity.ok().body(userService.readUsers(userFilterForm, pageable));
     }
 
     @PutMapping("/user/{id}")
