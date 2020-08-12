@@ -18,7 +18,7 @@ import java.net.URI;
 @RequestMapping("/api")
 class UserController extends ResponseEntityExceptionHandler {
 
-    private UserService userService;
+    private final UserService userService;
 
     UserController(UserService userService) {
         this.userService = userService;
@@ -37,8 +37,8 @@ class UserController extends ResponseEntityExceptionHandler {
                                             @RequestParam(name = "role", required = false) String role,
                                             @RequestParam(name = "password", required = false) String password,
                                             @RequestParam(name = "email", required = false) String email,
-                                            @RequestParam(name = "minCost", required = false) Double minCost,
-                                            @RequestParam(name = "maxCost", required = false) Double maxCost,
+                                            @RequestParam(name = "minCost", required = false) double minCost,
+                                            @RequestParam(name = "maxCost", required = false) double maxCost,
                                             Pageable pageable) {
         return ResponseEntity.ok().body(userService.readUsers(new UserFilterForm(login, firstName,
                 lastName, role, password, email, minCost, maxCost), pageable));

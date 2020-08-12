@@ -7,9 +7,6 @@ import javax.validation.constraints.Size;
 
 public class UserFilterForm extends UserBaseForm {
 
-    public static final Double MIN_COST_PER_HOUR = 0.01;
-    public static final Double MAX_COST_PER_HOUR = 1000.00;
-
     @NotBlank
     @Size(min = 6, message = "password must have at least 6 characters")
     private String password;
