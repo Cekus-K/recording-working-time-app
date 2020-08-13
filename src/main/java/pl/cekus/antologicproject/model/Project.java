@@ -39,6 +39,9 @@ public class Project {
     @ManyToMany(targetEntity = User.class, mappedBy = "projects", fetch = FetchType.EAGER)
     private Set<User> users = new HashSet<>();
 
+    @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<WorkingTime> workingTimes;
+
     public Project(String projectName, String description, LocalDate startDate, LocalDate endDate, Double budget) {
         this.projectName = projectName;
         this.description = description;

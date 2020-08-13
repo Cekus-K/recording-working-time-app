@@ -91,8 +91,9 @@ public class ProjectService {
         projectRepository.deleteById(id);
     }
 
-    private Project findProjectByProjectName(String projectName) {
-        return projectRepository.findByProjectName(projectName).orElseThrow(() -> new IllegalArgumentException("provided project not found"));
+    public Project findProjectByProjectName(String projectName) {
+        return projectRepository.findByProjectName(projectName)
+                .orElseThrow(() -> new IllegalArgumentException("provided project not found"));
     }
 
     private void setValuesToUpdatingProject(Project toUpdate, ProjectCreateForm createForm) {

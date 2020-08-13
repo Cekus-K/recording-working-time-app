@@ -47,6 +47,9 @@ public class User {
             cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private Set<Project> projects = new HashSet<>();
 
+    @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
+    private Set<WorkingTime> workingTimes;
+
     public User(String login, String firstName, String lastName, Role role, String password, String email, Double costPerHour) {
         this.login = login;
         this.firstName = firstName;
