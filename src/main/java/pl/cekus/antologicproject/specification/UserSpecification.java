@@ -21,39 +21,36 @@ public class UserSpecification implements Specification<User> {
     }
 
     @Override
-    public Predicate toPredicate(Root<User> root, CriteriaQuery<?> cq, CriteriaBuilder cb) {
+    public Predicate toPredicate(Root<User> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
 
         if (userFilterForm.getLogin() != null) {
-            predicates.add(cb.like(root.get("login"), "%" + userFilterForm.getLogin() + "%"));
+            predicates.add(criteriaBuilder.like(root.get(User_.LOGIN), "%" + userFilterForm.getLogin() + "%"));
         }
 
         if (userFilterForm.getFirstName() != null) {
-            predicates.add(cb.like(root.get("firstName"), "%" + userFilterForm.getFirstName() + "%"));
+            predicates.add(criteriaBuilder.like(root.get(User_.FIRST_NAME), "%" + userFilterForm.getFirstName() + "%"));
         }
 
         if (userFilterForm.getLastName() != null) {
-            predicates.add(cb.like(root.get("lastName"), "%" + userFilterForm.getLastName() + "%"));
+            predicates.add(criteriaBuilder.like(root.get(User_.LAST_NAME), "%" + userFilterForm.getLastName() + "%"));
         }
 
         if (userFilterForm.getRole() != null) {
             try {
                 Role userRole = Role.valueOf(userFilterForm.getRole().toUpperCase());
-                predicates.add(cb.equal(root.get("role"), userRole));
+                predicates.add(criteriaBuilder.equal(root.get(User_.ROLE), userRole));
             } catch (IllegalArgumentException e) {
                 System.err.println("an invalid user role was provided");
             }
         }
 
         if (userFilterForm.getMinCost() != null) {
-            predicates.add(cb.greaterThanOrEqualTo(root.get("costPerHour"), userFilterForm.getMinCost()));
+            predicates.add(criteriaBuilder.between(root.get(User_.COST_PER_HOUR), userFilterForm.getMinCost(),
+                    userFilterForm.getMaxCost()));
         }
 
-        if (userFilterForm.getMaxCost() != null) {
-            predicates.add(cb.lessThanOrEqualTo(root.get("costPerHour"), userFilterForm.getMaxCost()));
-        }
-
-        return cq.where(cb.and(predicates.toArray(new Predicate[0])))
-                .distinct(true).orderBy(cb.desc(root.get("id"))).getRestriction();
+        return criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[0])))
+                .distinct(true).orderBy(criteriaBuilder.desc(root.get(User_.ID))).getRestriction();
     }
 }

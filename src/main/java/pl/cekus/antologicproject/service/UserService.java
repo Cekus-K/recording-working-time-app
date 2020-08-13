@@ -8,12 +8,14 @@ import org.springframework.stereotype.Service;
 import pl.cekus.antologicproject.dto.UserDto;
 import pl.cekus.antologicproject.form.UserCreateForm;
 import pl.cekus.antologicproject.form.UserFilterForm;
-import pl.cekus.antologicproject.model.Role;
 import pl.cekus.antologicproject.model.User;
 import pl.cekus.antologicproject.repository.UserRepository;
 import pl.cekus.antologicproject.specification.UserSpecification;
+import pl.cekus.antologicproject.utills.Mapper;
 
 import java.util.Optional;
+
+import static pl.cekus.antologicproject.utills.Mapper.*;
 
 @Service
 public class UserService {
@@ -25,30 +27,45 @@ public class UserService {
     }
 
     public UserDto createUser(UserCreateForm userCreateForm) {
-        if (userRepository.findByLogin(userCreateForm.getLogin()) == null) {
+        if (!userRepository.existsByLogin(userCreateForm.getLogin())) {
             User toCreate = mapCreateFormToUser(userCreateForm);
             return mapUserToUserDto(userRepository.save(toCreate));
         }
-        return mapUserToUserDto(userRepository.findByLogin(userCreateForm.getLogin()));
+        return mapUserToUserDto(findUserByLogin(userCreateForm.getLogin()));
     }
 
     public Optional<User> readUserById(Long id) {
         return userRepository.findById(id);
     }
 
-    public Page<UserDto> readUsers(UserFilterForm filterForm, Pageable pageable) {
+    public Page<UserDto> readUsersWithFilters(UserFilterForm filterForm, Pageable pageable) {
         UserSpecification specification = new UserSpecification(filterForm);
         return userRepository.findAll(specification, pageable)
-                .map(this::mapUserToUserDto);
+                .map(Mapper::mapUserToUserDto);
     }
 
     public void updateUser(Long id, UserCreateForm userCreateForm) {
         Optional<User> toUpdate = userRepository.findById(id);
-        toUpdate.ifPresent(user -> setValuesToUpdatingUser(user, userCreateForm));
+        toUpdate.ifPresent(user -> {
+            checkIfLoginAlreadyExists(user.getLogin());
+            setValuesToUpdatingUser(user, userCreateForm);
+            userRepository.save(user);
+        });
     }
 
     public void deleteUser(Long id) {
         userRepository.deleteById(id);
+    }
+
+    User findUserByLogin(String login) {
+        return userRepository.findByLogin(login).orElseThrow(() -> new IllegalArgumentException("provided user not found"));
+    }
+
+    // FIXME: write own exceptions
+    private void checkIfLoginAlreadyExists(String login) {
+        if (findUserByLogin(login) != null) {
+            throw new IllegalStateException("provided login already exists");
+        }
     }
 
     private void setValuesToUpdatingUser(User toUpdate, UserCreateForm createForm) {
@@ -61,23 +78,11 @@ public class UserService {
         toUpdate.setCostPerHour(createForm.getCostPerHour());
     }
 
-    private User mapCreateFormToUser(UserCreateForm createForm) {
-        return new User(createForm.getLogin(), createForm.getFirstName(), createForm.getLastName(),
-                mapStringToRole(createForm.getRole()), createForm.getPassword(), createForm.getEmail(), createForm.getCostPerHour());
-    }
-
-    private UserDto mapUserToUserDto(User user) {
-        return new UserDto(user.getLogin(), user.getFirstName(), user.getLastName(),
-                user.getRole(), user.getEmail(), user.getCostPerHour());
-    }
-
-    private Role mapStringToRole(String role) {
-        return Role.valueOf(role.toUpperCase());
-    }
-
     @EventListener(ApplicationReadyEvent.class)
     public void createTestUser() {
         createUser(new UserCreateForm("admin", "jan", "kowalski",
                 "admin", "1qaz2wsx", "jankowalski@email.com", 28.75));
+        createUser(new UserCreateForm("employee", "julian", "nowak",
+                "employee", "1qaz2wsx", "emp@email.com", 52.75));
     }
 }

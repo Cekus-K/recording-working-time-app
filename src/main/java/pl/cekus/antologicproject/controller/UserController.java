@@ -12,7 +12,6 @@ import pl.cekus.antologicproject.form.UserFilterForm;
 import pl.cekus.antologicproject.service.UserService;
 
 import javax.validation.Valid;
-import java.net.URI;
 
 @RestController
 @RequestMapping("/api")
@@ -24,21 +23,22 @@ class UserController extends ResponseEntityExceptionHandler {
         this.userService = userService;
     }
 
+    @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/user")
-    ResponseEntity<UserDto> createUser(@RequestBody @Valid UserCreateForm user) {
-        UserDto result = userService.createUser(user);
-        return ResponseEntity.created(URI.create("/" + result.getLogin())).body(result);
+    UserDto createUser(@RequestBody @Valid UserCreateForm user) {
+        return userService.createUser(user);
     }
 
+    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/users")
-    ResponseEntity<Page<UserDto>> readUsers(UserFilterForm userFilterForm, Pageable pageable) {
-        return ResponseEntity.ok().body(userService.readUsers(userFilterForm, pageable));
+    Page<UserDto> readUsers(UserFilterForm userFilterForm, Pageable pageable) {
+        return userService.readUsersWithFilters(userFilterForm, pageable);
     }
 
     @PutMapping("/user/{id}")
     ResponseEntity<Void> updateUser(@PathVariable Long id, @RequestBody @Valid UserCreateForm user) {
         if (userService.readUserById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         userService.updateUser(id, user);
         return new ResponseEntity<>(HttpStatus.OK);
@@ -47,9 +47,9 @@ class UserController extends ResponseEntityExceptionHandler {
     @DeleteMapping("/user/{id}")
     ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         if (userService.readUserById(id).isEmpty()) {
-            return ResponseEntity.notFound().build();
+            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         userService.deleteUser(id);
-        return ResponseEntity.noContent().build();
+        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 }

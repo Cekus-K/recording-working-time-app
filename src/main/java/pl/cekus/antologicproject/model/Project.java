@@ -1,5 +1,9 @@
 package pl.cekus.antologicproject.model;
 
+import lombok.Getter;
+import lombok.NoArgsConstructor;
+import lombok.Setter;
+
 import javax.persistence.*;
 import java.time.LocalDate;
 import java.util.HashSet;
@@ -7,14 +11,17 @@ import java.util.Set;
 
 @Entity
 @Table(name = "projects")
+@Getter
+@Setter
+@NoArgsConstructor
 public class Project {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id")
+    @Column(name = "id", unique = true, nullable = false)
     private Long id;
 
-    @Column(name = "project_name", nullable = false, unique = true)
+    @Column(name = "project_name", unique = true, nullable = false)
     private String projectName;
 
     @Column(name = "description")
@@ -29,61 +36,14 @@ public class Project {
     @Column(name = "budget", nullable = false)
     private Double budget;
 
-    @ManyToMany(targetEntity = User.class, mappedBy = "projects", cascade = CascadeType.ALL)
+    @ManyToMany(targetEntity = User.class, mappedBy = "projects", fetch = FetchType.EAGER)
     private Set<User> users = new HashSet<>();
-
-    public Project() {
-    }
 
     public Project(String projectName, String description, LocalDate startDate, LocalDate endDate, Double budget) {
         this.projectName = projectName;
         this.description = description;
         this.startDate = startDate;
         this.endDate = endDate;
-        this.budget = budget;
-    }
-
-    public Long getId() {
-        return id;
-    }
-
-    public String getProjectName() {
-        return projectName;
-    }
-
-    public void setProjectName(String projectName) {
-        this.projectName = projectName;
-    }
-
-    public String getDescription() {
-        return description;
-    }
-
-    public void setDescription(String description) {
-        this.description = description;
-    }
-
-    public LocalDate getStartDate() {
-        return startDate;
-    }
-
-    public void setStartDate(LocalDate startDate) {
-        this.startDate = startDate;
-    }
-
-    public LocalDate getEndDate() {
-        return endDate;
-    }
-
-    public void setEndDate(LocalDate endDate) {
-        this.endDate = endDate;
-    }
-
-    public Double getBudget() {
-        return budget;
-    }
-
-    public void setBudget(Double budget) {
         this.budget = budget;
     }
 

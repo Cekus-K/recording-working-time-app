@@ -3,15 +3,14 @@ package pl.cekus.antologicproject.repository;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
-import pl.cekus.antologicproject.model.User;
+import pl.cekus.antologicproject.model.Project;
 
 import java.util.Optional;
 
 @Repository
-public interface UserRepository extends JpaRepository<User, Long>, JpaSpecificationExecutor<User> {
+public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpecificationExecutor<Project> {
 
-    Optional<User> findByLogin(String login);
+    Optional<Project> findByProjectName(String projectName);
 
-    boolean existsByLogin(String login);
-
+    boolean existsByProjectName(String projectName);
 }

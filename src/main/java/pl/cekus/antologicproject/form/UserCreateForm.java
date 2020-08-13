@@ -1,11 +1,25 @@
 package pl.cekus.antologicproject.form;
 
-import javax.validation.constraints.Email;
-import javax.validation.constraints.NotBlank;
-import javax.validation.constraints.Positive;
-import javax.validation.constraints.Size;
+import lombok.AllArgsConstructor;
+import lombok.Getter;
 
-public class UserCreateForm extends UserBaseForm {
+import javax.validation.constraints.*;
+
+@Getter
+@AllArgsConstructor
+public class UserCreateForm {
+
+    @NotBlank
+    private String login;
+
+    @NotBlank
+    private String firstName;
+
+    @NotBlank
+    private String lastName;
+
+    @NotNull
+    private String role;
 
     @NotBlank
     @Size(min = 6, message = "password must have at least 6 characters")
@@ -16,23 +30,4 @@ public class UserCreateForm extends UserBaseForm {
 
     @Positive(message = "cost per hour must be greater than zero")
     private Double costPerHour;
-
-    public UserCreateForm(String login, String firstName, String lastName, String role, String password, String email, Double costPerHour) {
-        super(login, firstName, lastName, role);
-        this.password = password;
-        this.email = email;
-        this.costPerHour = costPerHour;
-    }
-
-    public String getPassword() {
-        return password;
-    }
-
-    public String getEmail() {
-        return email;
-    }
-
-    public Double getCostPerHour() {
-        return costPerHour;
-    }
 }
