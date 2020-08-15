@@ -36,7 +36,7 @@ public class Project {
     @Column(name = "budget", nullable = false)
     private Double budget;
 
-    @ManyToMany(targetEntity = User.class, mappedBy = "projects", fetch = FetchType.EAGER)
+    @ManyToMany(targetEntity = User.class, mappedBy = "projects", fetch = FetchType.LAZY)
     private Set<User> users = new HashSet<>();
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)

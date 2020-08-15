@@ -43,7 +43,7 @@ public class User {
     @Column(name = "cost_per_hour", nullable = false)
     private Double costPerHour;
 
-    @ManyToMany(targetEntity = Project.class, fetch = FetchType.EAGER,
+    @ManyToMany(targetEntity = Project.class, fetch = FetchType.LAZY,
             cascade = {CascadeType.MERGE, CascadeType.PERSIST})
     private Set<Project> projects = new HashSet<>();
 

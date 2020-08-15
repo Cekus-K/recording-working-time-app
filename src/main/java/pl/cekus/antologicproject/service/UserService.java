@@ -1,7 +1,5 @@
 package pl.cekus.antologicproject.service;
 
-import org.springframework.boot.context.event.ApplicationReadyEvent;
-import org.springframework.context.event.EventListener;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -47,7 +45,7 @@ public class UserService {
     public void updateUser(Long id, UserCreateForm userCreateForm) {
         Optional<User> toUpdate = userRepository.findById(id);
         toUpdate.ifPresent(user -> {
-            checkIfLoginAlreadyExists(user.getLogin());
+            checkIfLoginAlreadyExists(userCreateForm.getLogin());
             setValuesToUpdatingUser(user, userCreateForm);
             userRepository.save(user);
         });
@@ -58,12 +56,13 @@ public class UserService {
     }
 
     User findUserByLogin(String login) {
-        return userRepository.findByLogin(login).orElseThrow(() -> new IllegalArgumentException("provided user not found"));
+        return userRepository.findByLogin(login)
+                .orElseThrow(() -> new IllegalArgumentException("provided user not found"));
     }
 
     // FIXME: write own exceptions
     private void checkIfLoginAlreadyExists(String login) {
-        if (findUserByLogin(login) != null) {
+        if (userRepository.findByLogin(login).isPresent()) {
             throw new IllegalStateException("provided login already exists");
         }
     }
@@ -76,13 +75,5 @@ public class UserService {
         toUpdate.setPassword(createForm.getPassword());
         toUpdate.setEmail(createForm.getEmail());
         toUpdate.setCostPerHour(createForm.getCostPerHour());
-    }
-
-    @EventListener(ApplicationReadyEvent.class)
-    public void createTestUser() {
-        createUser(new UserCreateForm("admin", "jan", "kowalski",
-                "admin", "1qaz2wsx", "jankowalski@email.com", 28.75));
-        createUser(new UserCreateForm("employee", "julian", "nowak",
-                "employee", "1qaz2wsx", "emp@email.com", 52.75));
     }
 }

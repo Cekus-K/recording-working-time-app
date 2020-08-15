@@ -32,7 +32,8 @@ public class WorkingTimeService {
         if (!user.getProjects().contains(project)) {
             throw new IllegalArgumentException("the given employee is not assigned to given project");
         }
-        workingTimeRepository.save(new WorkingTime(createForm.getStartTime(), createForm.getEndTime(), user, project));
+        WorkingTime workingTime = new WorkingTime(createForm.getStartTime(), createForm.getEndTime(), user, project);
+        workingTimeRepository.save(workingTime);
     }
 
     public List<WorkingTimeDto> readAllWorkingTimes(String login) {

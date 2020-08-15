@@ -4,10 +4,7 @@ import org.springframework.data.jpa.domain.Specification;
 import pl.cekus.antologicproject.form.ProjectFilterForm;
 import pl.cekus.antologicproject.model.Project;
 
-import javax.persistence.criteria.CriteriaBuilder;
-import javax.persistence.criteria.CriteriaQuery;
-import javax.persistence.criteria.Predicate;
-import javax.persistence.criteria.Root;
+import javax.persistence.criteria.*;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -22,12 +19,13 @@ public class ProjectSpecification implements Specification<Project> {
     @Override
     public Predicate toPredicate(Root<Project> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
+        root.fetch(Project_.USERS, JoinType.LEFT);
 
         if (projectFilterForm.getProjectName() != null) {
             predicates.add(criteriaBuilder.like(root.get(Project_.PROJECT_NAME), "%" + projectFilterForm.getProjectName() + "%"));
         }
 
-        if (projectFilterForm.getStartDate() != null) {
+        if (projectFilterForm.getStartDate() != null && projectFilterForm.getEndDate() != null) {
             predicates.add(
                     criteriaBuilder.and(
                             criteriaBuilder.between(root.get(Project_.START_DATE), projectFilterForm.getStartDate(), projectFilterForm.getEndDate()),
@@ -42,7 +40,7 @@ public class ProjectSpecification implements Specification<Project> {
             );
         }
 
-        // :TODO
+        // TODO:
         if (projectFilterForm.getBudgetExceeded() != null) {
         }
 
