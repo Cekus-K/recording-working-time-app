@@ -6,6 +6,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.util.HashSet;
 import java.util.Set;
 
@@ -27,7 +28,7 @@ public class User {
     @Column(name = "first_name", nullable = false)
     private String firstName;
 
-    @Column(name = "last_name", nullable = false, unique = true)
+    @Column(name = "last_name", nullable = false)
     private String lastName;
 
     @Enumerated(value = EnumType.STRING)
@@ -41,7 +42,7 @@ public class User {
     private String email;
 
     @Column(name = "cost_per_hour", nullable = false)
-    private Double costPerHour;
+    private BigDecimal costPerHour;
 
     @ManyToMany(targetEntity = Project.class, fetch = FetchType.LAZY,
             cascade = {CascadeType.MERGE, CascadeType.PERSIST})
@@ -50,7 +51,7 @@ public class User {
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<WorkingTime> workingTimes;
 
-    public User(String login, String firstName, String lastName, Role role, String password, String email, Double costPerHour) {
+    public User(String login, String firstName, String lastName, Role role, String password, String email, BigDecimal costPerHour) {
         this.login = login;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -63,5 +64,15 @@ public class User {
     @JsonIgnore
     public Set<Project> getProjects() {
         return projects;
+    }
+
+    public void addWorkingTime(WorkingTime workingTime) {
+        this.workingTimes.add(workingTime);
+        workingTime.setUser(this);
+    }
+
+    public void removeWorkingTime(WorkingTime workingTime) {
+        this.workingTimes.remove(workingTime);
+        workingTime.setUser(null);
     }
 }

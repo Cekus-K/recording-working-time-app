@@ -24,36 +24,17 @@ class ProjectController extends ResponseEntityExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.CREATED)
-    @PostMapping("/project")
+    @PostMapping("/projects")
     ProjectDto createProject(@RequestBody @Valid ProjectCreateForm project) {
         return projectService.createProject(project);
     }
 
-    @ResponseStatus(HttpStatus.OK)
     @GetMapping("/projects")
     Page<ProjectDto> filterProject(@RequestBody ProjectFilterForm projectFilterForm, Pageable pageable) {
         return projectService.readProjectsWithFilters(projectFilterForm, pageable);
     }
 
-    @PutMapping("/project/{projectName}/add")
-    ResponseEntity<Void> addEmployeeToProject(@PathVariable String projectName, @RequestParam(name = "employee") String employeeLogin) {
-        boolean assignmentResult = projectService.addEmployeeToProject(employeeLogin, projectName);
-        if (assignmentResult) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-    }
-
-    @PutMapping("/project/{projectName}/remove")
-    ResponseEntity<Void> removeEmployeeFromProject(@PathVariable String projectName, @RequestParam(name = "employee") String employeeLogin) {
-        boolean assignmentResult = projectService.removeEmployeeFromProject(employeeLogin, projectName);
-        if (assignmentResult) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
-    }
-
-    @PutMapping("/project/{id}")
+    @PutMapping("/projects/{id}")
     ResponseEntity<Void> updateProject(@PathVariable Long id, @RequestBody @Valid ProjectCreateForm project) {
         if (projectService.readProjectById(id).isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
@@ -62,12 +43,30 @@ class ProjectController extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @DeleteMapping("/project/{id}")
+    @DeleteMapping("/projects/{id}")
     ResponseEntity<Void> deleteUser(@PathVariable Long id) {
         if (projectService.readProjectById(id).isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
         projectService.deleteProject(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @PostMapping("/projects/{projectName}")
+    ResponseEntity<Void> addEmployeeToProject(@PathVariable String projectName, @RequestParam(name = "employee") String employeeLogin) {
+        boolean assignmentResult = projectService.addEmployeeToProject(employeeLogin, projectName);
+        if (assignmentResult) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+    @DeleteMapping("/projects/{projectName}")
+    ResponseEntity<Void> removeEmployeeFromProject(@PathVariable String projectName, @RequestParam(name = "employee") String employeeLogin) {
+        boolean assignmentResult = projectService.removeEmployeeFromProject(employeeLogin, projectName);
+        if (assignmentResult) {
+            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+        }
+        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 }

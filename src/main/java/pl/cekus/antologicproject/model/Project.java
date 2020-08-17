@@ -5,6 +5,7 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.HashSet;
 import java.util.Set;
@@ -34,7 +35,7 @@ public class Project {
     private LocalDate endDate;
 
     @Column(name = "budget", nullable = false)
-    private Double budget;
+    private BigDecimal budget;
 
     @ManyToMany(targetEntity = User.class, mappedBy = "projects", fetch = FetchType.LAZY)
     private Set<User> users = new HashSet<>();
@@ -42,7 +43,7 @@ public class Project {
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<WorkingTime> workingTimes;
 
-    public Project(String projectName, String description, LocalDate startDate, LocalDate endDate, Double budget) {
+    public Project(String projectName, String description, LocalDate startDate, LocalDate endDate, BigDecimal budget) {
         this.projectName = projectName;
         this.description = description;
         this.startDate = startDate;

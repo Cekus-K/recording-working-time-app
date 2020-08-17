@@ -9,27 +9,27 @@ import pl.cekus.antologicproject.form.UserFilterForm;
 import pl.cekus.antologicproject.model.User;
 import pl.cekus.antologicproject.repository.UserRepository;
 import pl.cekus.antologicproject.specification.UserSpecification;
-import pl.cekus.antologicproject.utills.Mapper;
+import pl.cekus.antologicproject.utills.UserMapper;
 
 import java.util.Optional;
-
-import static pl.cekus.antologicproject.utills.Mapper.*;
 
 @Service
 public class UserService {
 
     private final UserRepository userRepository;
+    private final UserMapper userMapper;
 
-    UserService(UserRepository userRepository) {
+    UserService(UserRepository userRepository, UserMapper userMapper) {
         this.userRepository = userRepository;
+        this.userMapper = userMapper;
     }
 
     public UserDto createUser(UserCreateForm userCreateForm) {
-        if (!userRepository.existsByLogin(userCreateForm.getLogin())) {
-            User toCreate = mapCreateFormToUser(userCreateForm);
-            return mapUserToUserDto(userRepository.save(toCreate));
+        if (userRepository.findByLogin(userCreateForm.getLogin()).isPresent()) {
+            throw new IllegalArgumentException("provided login already exists");
         }
-        return mapUserToUserDto(findUserByLogin(userCreateForm.getLogin()));
+        User toCreate = userMapper.mapUserCreateFormToUser(userCreateForm);
+        return userMapper.mapUserToUserDto(userRepository.save(toCreate));
     }
 
     public Optional<User> readUserById(Long id) {
@@ -39,13 +39,15 @@ public class UserService {
     public Page<UserDto> readUsersWithFilters(UserFilterForm filterForm, Pageable pageable) {
         UserSpecification specification = new UserSpecification(filterForm);
         return userRepository.findAll(specification, pageable)
-                .map(Mapper::mapUserToUserDto);
+                .map(userMapper::mapUserToUserDto);
     }
 
     public void updateUser(Long id, UserCreateForm userCreateForm) {
         Optional<User> toUpdate = userRepository.findById(id);
         toUpdate.ifPresent(user -> {
-            checkIfLoginAlreadyExists(userCreateForm.getLogin());
+            if (!user.getLogin().equals(userCreateForm.getLogin())) {
+                checkIfLoginAlreadyExists(userCreateForm.getLogin());
+            }
             setValuesToUpdatingUser(user, userCreateForm);
             userRepository.save(user);
         });
@@ -71,7 +73,7 @@ public class UserService {
         toUpdate.setLogin(createForm.getLogin());
         toUpdate.setFirstName(createForm.getFirstName());
         toUpdate.setLastName(createForm.getLastName());
-        toUpdate.setRole(mapStringToRole(createForm.getRole()));
+        toUpdate.setRole(createForm.getRole());
         toUpdate.setPassword(createForm.getPassword());
         toUpdate.setEmail(createForm.getEmail());
         toUpdate.setCostPerHour(createForm.getCostPerHour());

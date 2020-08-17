@@ -11,6 +11,4 @@ import java.util.Optional;
 public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpecificationExecutor<Project> {
 
     Optional<Project> findByProjectName(String projectName);
-
-    boolean existsByProjectName(String projectName);
 }

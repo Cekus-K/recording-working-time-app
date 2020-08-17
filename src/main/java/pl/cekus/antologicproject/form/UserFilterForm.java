@@ -2,6 +2,9 @@ package pl.cekus.antologicproject.form;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import pl.cekus.antologicproject.model.Role;
+
+import java.math.BigDecimal;
 
 @Getter
 @AllArgsConstructor
@@ -13,9 +16,9 @@ public class UserFilterForm {
 
     private String lastName;
 
-    private String role;
+    private Role role;
 
-    private Double minCost;
+    private BigDecimal minCost;
 
-    private Double maxCost;
+    private BigDecimal maxCost;
 }

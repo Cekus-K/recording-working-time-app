@@ -2,10 +2,14 @@ package pl.cekus.antologicproject.form;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
+import lombok.Setter;
+import pl.cekus.antologicproject.model.Role;
 
 import javax.validation.constraints.*;
+import java.math.BigDecimal;
 
 @Getter
+@Setter
 @AllArgsConstructor
 public class UserCreateForm {
 
@@ -19,7 +23,7 @@ public class UserCreateForm {
     private String lastName;
 
     @NotNull
-    private String role;
+    private Role role;
 
     @NotBlank
     @Size(min = 6, message = "password must have at least 6 characters")
@@ -29,5 +33,5 @@ public class UserCreateForm {
     private String email;
 
     @Positive(message = "cost per hour must be greater than zero")
-    private Double costPerHour;
+    private BigDecimal costPerHour;
 }

@@ -11,30 +11,32 @@ import pl.cekus.antologicproject.model.Role;
 import pl.cekus.antologicproject.model.User;
 import pl.cekus.antologicproject.repository.ProjectRepository;
 import pl.cekus.antologicproject.specification.ProjectSpecification;
-import pl.cekus.antologicproject.utills.Mapper;
+import pl.cekus.antologicproject.utills.ProjectMapper;
 
+import java.math.BigDecimal;
+import java.math.RoundingMode;
+import java.time.Duration;
 import java.util.Optional;
-
-import static pl.cekus.antologicproject.utills.Mapper.mapCreateFormToProject;
-import static pl.cekus.antologicproject.utills.Mapper.mapProjectToProjectDto;
 
 @Service
 public class ProjectService {
 
     private final ProjectRepository projectRepository;
     private final UserService userService;
+    private final ProjectMapper projectMapper;
 
-    ProjectService(ProjectRepository projectRepository, UserService userService) {
+    ProjectService(ProjectRepository projectRepository, UserService userService, ProjectMapper projectMapper) {
         this.projectRepository = projectRepository;
         this.userService = userService;
+        this.projectMapper = projectMapper;
     }
 
     public ProjectDto createProject(ProjectCreateForm projectCreateForm) {
-        if (!projectRepository.existsByProjectName(projectCreateForm.getProjectName())) {
-            Project toCreate = mapCreateFormToProject(projectCreateForm);
-            return mapProjectToProjectDto(projectRepository.save(toCreate));
+        if (projectRepository.findByProjectName(projectCreateForm.getProjectName()).isPresent()) {
+            throw new IllegalArgumentException("provided project name already exists");
         }
-        return mapProjectToProjectDto(findProjectByProjectName(projectCreateForm.getProjectName()));
+        Project toCreate = projectMapper.mapProjectCreateFormToProject(projectCreateForm);
+        return projectMapper.mapProjectToProjectDto(projectRepository.save(toCreate));
     }
 
     public boolean addEmployeeToProject(String login, String projectName) {
@@ -68,13 +70,30 @@ public class ProjectService {
     public Page<ProjectDto> readProjectsWithFilters(ProjectFilterForm filterForm, Pageable pageable) {
         ProjectSpecification specification = new ProjectSpecification(filterForm);
         return projectRepository.findAll(specification, pageable)
-                .map(Mapper::mapProjectToProjectDto);
+                .map(projectMapper::mapProjectToProjectDto)
+                .map(this::setBudgetPercentageUse);
+    }
+
+    public BigDecimal calculateBudget(String projectName) {
+        Project project = findProjectByProjectName(projectName);
+        return project.getBudget().min(BigDecimal.valueOf(project.getUsers().stream()
+                .map(user -> user.getWorkingTimes().stream()
+                        .map(workingTime -> {
+                            long seconds = Duration.between(workingTime.getStartTime(), workingTime.getEndTime()).toSeconds();
+                            return user.getCostPerHour().multiply(BigDecimal.valueOf(seconds / 3600));
+                        })
+                        .mapToDouble(BigDecimal::doubleValue)
+                        .sum())
+                .mapToDouble(userCost -> userCost)
+                .sum()));
     }
 
     public void updateProject(Long id, ProjectCreateForm projectCreateForm) {
         Optional<Project> toUpdate = projectRepository.findById(id);
         toUpdate.ifPresent(project -> {
-            checkIfProjectNameAlreadyExists(projectCreateForm.getProjectName());
+            if (!project.getProjectName().equals(projectCreateForm.getProjectName())) {
+                checkIfProjectNameAlreadyExists(projectCreateForm.getProjectName());
+            }
             setValuesToUpdatingProject(project, projectCreateForm);
             projectRepository.save(project);
         });
@@ -91,6 +110,16 @@ public class ProjectService {
     public Project findProjectByProjectName(String projectName) {
         return projectRepository.findByProjectName(projectName)
                 .orElseThrow(() -> new IllegalArgumentException("provided project not found"));
+    }
+
+    private ProjectDto setBudgetPercentageUse(ProjectDto projectDto) {
+        BigDecimal budget = projectDto.getBudget();
+        BigDecimal remainingBudget = calculateBudget(projectDto.getProjectName());
+        projectDto.setBudgetPercentageUse((budget.divide(remainingBudget, 2, RoundingMode.HALF_UP)
+                .min(BigDecimal.valueOf(1))
+                .multiply(BigDecimal.valueOf(100))
+                .setScale(2, RoundingMode.HALF_UP)));
+        return projectDto;
     }
 
     private void setValuesToUpdatingProject(Project toUpdate, ProjectCreateForm createForm) {

@@ -27,13 +27,12 @@ public class ProjectSpecification implements Specification<Project> {
             predicates.add(criteriaBuilder.like(root.get(Project_.projectName), "%" + projectFilterForm.getProjectName() + "%"));
         }
 
-        if (projectFilterForm.getStartDate() != null && projectFilterForm.getEndDate() != null) {
-            predicates.add(
-                    criteriaBuilder.and(
-                            criteriaBuilder.between(root.get(Project_.startDate), projectFilterForm.getStartDate(), projectFilterForm.getEndDate()),
-                            criteriaBuilder.between(root.get(Project_.endDate), projectFilterForm.getStartDate(), projectFilterForm.getEndDate())
-                    )
-            );
+        if (projectFilterForm.getStartDate() != null) {
+            predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get(Project_.startDate), projectFilterForm.getStartDate()));
+        }
+
+        if (projectFilterForm.getEndDate() != null) {
+            predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get(Project_.endDate), projectFilterForm.getEndDate()));
         }
 
         if (projectFilterForm.getUsers() != null) {

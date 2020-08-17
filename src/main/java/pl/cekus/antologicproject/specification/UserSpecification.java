@@ -15,9 +15,6 @@ import java.util.List;
 
 public class UserSpecification implements Specification<User> {
 
-    public static final double MIN_COST_PER_HOUR = 0.01;
-    public static final double MAX_COST_PER_HOUR = Double.MAX_VALUE;
-
     private UserFilterForm userFilterForm;
 
     public UserSpecification(UserFilterForm userFilterForm) {
@@ -42,27 +39,21 @@ public class UserSpecification implements Specification<User> {
 
         if (userFilterForm.getRole() != null) {
             try {
-                Role userRole = Role.valueOf(userFilterForm.getRole().toUpperCase());
+                Role userRole = userFilterForm.getRole();
                 predicates.add(criteriaBuilder.equal(root.get(User_.role), userRole));
             } catch (IllegalArgumentException e) {
                 System.err.println("an invalid user role was provided");
             }
         }
 
-        // TODO: refactor
-        if (userFilterForm.getMinCost() != null || userFilterForm.getMaxCost() != null) {
-            boolean nullMin = userFilterForm.getMinCost() == null;
-            boolean nullMax = userFilterForm.getMaxCost() == null;
-            if (nullMin && !nullMax) {
-                predicates.add(criteriaBuilder.between(root.get(User_.costPerHour),
-                        MIN_COST_PER_HOUR, userFilterForm.getMaxCost()));
-            } else if (nullMax && !nullMin) {
-                predicates.add(criteriaBuilder.between(root.get(User_.costPerHour),
-                        userFilterForm.getMinCost(), MAX_COST_PER_HOUR));
-            } else {
-                predicates.add(criteriaBuilder.between(root.get(User_.costPerHour),
-                        userFilterForm.getMinCost(), userFilterForm.getMaxCost()));
-            }
+        if (userFilterForm.getMinCost() != null) {
+            predicates.add(criteriaBuilder.greaterThanOrEqualTo(root.get(User_.costPerHour),
+                    userFilterForm.getMinCost()));
+        }
+
+        if (userFilterForm.getMaxCost() != null) {
+            predicates.add(criteriaBuilder.lessThanOrEqualTo(root.get(User_.costPerHour),
+                    userFilterForm.getMaxCost()));
         }
 
         return criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[0])))

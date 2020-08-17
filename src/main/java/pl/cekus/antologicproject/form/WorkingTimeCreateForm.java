@@ -10,8 +10,10 @@ import java.time.LocalDateTime;
 @AllArgsConstructor
 public class WorkingTimeCreateForm {
 
+    @NotNull
     private LocalDateTime startTime;
 
+    @NotNull
     private LocalDateTime endTime;
 
     @NotNull
