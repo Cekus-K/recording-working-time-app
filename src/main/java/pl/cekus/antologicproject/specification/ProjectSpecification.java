@@ -3,6 +3,8 @@ package pl.cekus.antologicproject.specification;
 import org.springframework.data.jpa.domain.Specification;
 import pl.cekus.antologicproject.form.ProjectFilterForm;
 import pl.cekus.antologicproject.model.Project;
+import pl.cekus.antologicproject.model.Project_;
+import pl.cekus.antologicproject.model.User_;
 
 import javax.persistence.criteria.*;
 import java.util.ArrayList;
@@ -19,24 +21,24 @@ public class ProjectSpecification implements Specification<Project> {
     @Override
     public Predicate toPredicate(Root<Project> root, CriteriaQuery<?> criteriaQuery, CriteriaBuilder criteriaBuilder) {
         List<Predicate> predicates = new ArrayList<>();
-        root.fetch(Project_.USERS, JoinType.LEFT);
+        root.fetch(Project_.users, JoinType.LEFT);
 
         if (projectFilterForm.getProjectName() != null) {
-            predicates.add(criteriaBuilder.like(root.get(Project_.PROJECT_NAME), "%" + projectFilterForm.getProjectName() + "%"));
+            predicates.add(criteriaBuilder.like(root.get(Project_.projectName), "%" + projectFilterForm.getProjectName() + "%"));
         }
 
         if (projectFilterForm.getStartDate() != null && projectFilterForm.getEndDate() != null) {
             predicates.add(
                     criteriaBuilder.and(
-                            criteriaBuilder.between(root.get(Project_.START_DATE), projectFilterForm.getStartDate(), projectFilterForm.getEndDate()),
-                            criteriaBuilder.between(root.get(Project_.END_DATE), projectFilterForm.getStartDate(), projectFilterForm.getEndDate())
+                            criteriaBuilder.between(root.get(Project_.startDate), projectFilterForm.getStartDate(), projectFilterForm.getEndDate()),
+                            criteriaBuilder.between(root.get(Project_.endDate), projectFilterForm.getStartDate(), projectFilterForm.getEndDate())
                     )
             );
         }
 
         if (projectFilterForm.getUsers() != null) {
             projectFilterForm.getUsers().forEach(user ->
-                    predicates.add(criteriaBuilder.equal(root.join(Project_.USERS).get(User_.LOGIN), user.getLogin()))
+                    predicates.add(criteriaBuilder.equal(root.join(Project_.users).get(User_.login), user.getLogin()))
             );
         }
 
@@ -45,6 +47,6 @@ public class ProjectSpecification implements Specification<Project> {
         }
 
         return criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[0])))
-                .distinct(true).orderBy(criteriaBuilder.desc(root.get(Project_.ID))).getRestriction();
+                .distinct(true).orderBy(criteriaBuilder.desc(root.get(Project_.id))).getRestriction();
     }
 }

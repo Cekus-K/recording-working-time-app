@@ -4,6 +4,7 @@ import org.springframework.data.jpa.domain.Specification;
 import pl.cekus.antologicproject.form.UserFilterForm;
 import pl.cekus.antologicproject.model.Role;
 import pl.cekus.antologicproject.model.User;
+import pl.cekus.antologicproject.model.User_;
 
 import javax.persistence.criteria.CriteriaBuilder;
 import javax.persistence.criteria.CriteriaQuery;
@@ -28,21 +29,21 @@ public class UserSpecification implements Specification<User> {
         List<Predicate> predicates = new ArrayList<>();
 
         if (userFilterForm.getLogin() != null) {
-            predicates.add(criteriaBuilder.like(root.get(User_.LOGIN), "%" + userFilterForm.getLogin() + "%"));
+            predicates.add(criteriaBuilder.like(root.get(User_.login), "%" + userFilterForm.getLogin() + "%"));
         }
 
         if (userFilterForm.getFirstName() != null) {
-            predicates.add(criteriaBuilder.like(root.get(User_.FIRST_NAME), "%" + userFilterForm.getFirstName() + "%"));
+            predicates.add(criteriaBuilder.like(root.get(User_.firstName), "%" + userFilterForm.getFirstName() + "%"));
         }
 
         if (userFilterForm.getLastName() != null) {
-            predicates.add(criteriaBuilder.like(root.get(User_.LAST_NAME), "%" + userFilterForm.getLastName() + "%"));
+            predicates.add(criteriaBuilder.like(root.get(User_.lastName), "%" + userFilterForm.getLastName() + "%"));
         }
 
         if (userFilterForm.getRole() != null) {
             try {
                 Role userRole = Role.valueOf(userFilterForm.getRole().toUpperCase());
-                predicates.add(criteriaBuilder.equal(root.get(User_.ROLE), userRole));
+                predicates.add(criteriaBuilder.equal(root.get(User_.role), userRole));
             } catch (IllegalArgumentException e) {
                 System.err.println("an invalid user role was provided");
             }
@@ -53,18 +54,18 @@ public class UserSpecification implements Specification<User> {
             boolean nullMin = userFilterForm.getMinCost() == null;
             boolean nullMax = userFilterForm.getMaxCost() == null;
             if (nullMin && !nullMax) {
-                predicates.add(criteriaBuilder.between(root.get(User_.COST_PER_HOUR),
+                predicates.add(criteriaBuilder.between(root.get(User_.costPerHour),
                         MIN_COST_PER_HOUR, userFilterForm.getMaxCost()));
             } else if (nullMax && !nullMin) {
-                predicates.add(criteriaBuilder.between(root.get(User_.COST_PER_HOUR),
+                predicates.add(criteriaBuilder.between(root.get(User_.costPerHour),
                         userFilterForm.getMinCost(), MAX_COST_PER_HOUR));
             } else {
-                predicates.add(criteriaBuilder.between(root.get(User_.COST_PER_HOUR),
+                predicates.add(criteriaBuilder.between(root.get(User_.costPerHour),
                         userFilterForm.getMinCost(), userFilterForm.getMaxCost()));
             }
         }
 
         return criteriaQuery.where(criteriaBuilder.and(predicates.toArray(new Predicate[0])))
-                .distinct(true).orderBy(criteriaBuilder.desc(root.get(User_.ID))).getRestriction();
+                .distinct(true).orderBy(criteriaBuilder.desc(root.get(User_.id))).getRestriction();
     }
 }
