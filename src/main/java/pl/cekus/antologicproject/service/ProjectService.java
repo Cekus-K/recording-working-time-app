@@ -76,16 +76,13 @@ public class ProjectService {
 
     public BigDecimal calculateBudget(String projectName) {
         Project project = findProjectByProjectName(projectName);
-        return project.getBudget().min(BigDecimal.valueOf(project.getUsers().stream()
-                .map(user -> user.getWorkingTimes().stream()
-                        .map(workingTime -> {
-                            long seconds = Duration.between(workingTime.getStartTime(), workingTime.getEndTime()).toSeconds();
-                            return user.getCostPerHour().multiply(BigDecimal.valueOf(seconds / 3600));
-                        })
-                        .mapToDouble(BigDecimal::doubleValue)
-                        .sum())
-                .mapToDouble(userCost -> userCost)
-                .sum()));
+        return project.getBudget().subtract(project.getUsers().stream().map(user -> {
+            long userWorkingTimeInSeconds = user.getWorkingTimes().stream()
+                    .filter(workingTime -> workingTime.getProject().getProjectName().equals(projectName))
+                    .map(workingTime -> Duration.between(workingTime.getStartTime(), workingTime.getEndTime()).toSeconds())
+                    .mapToLong(Long::longValue).sum();
+            return user.getCostPerHour().multiply(BigDecimal.valueOf(userWorkingTimeInSeconds / 3600));
+        }).reduce(BigDecimal.ZERO, BigDecimal::add));
     }
 
     public void updateProject(Long id, ProjectCreateForm projectCreateForm) {
@@ -115,10 +112,11 @@ public class ProjectService {
     private ProjectDto setBudgetPercentageUse(ProjectDto projectDto) {
         BigDecimal budget = projectDto.getBudget();
         BigDecimal remainingBudget = calculateBudget(projectDto.getProjectName());
-        projectDto.setBudgetPercentageUse((budget.divide(remainingBudget, 2, RoundingMode.HALF_UP)
-                .min(BigDecimal.valueOf(1))
-                .multiply(BigDecimal.valueOf(100))
-                .setScale(2, RoundingMode.HALF_UP)));
+        if (remainingBudget.equals(budget)) {
+            projectDto.setBudgetPercentageUse(BigDecimal.valueOf(0.0));
+            return projectDto;
+        }
+        projectDto.setBudgetPercentageUse(remainingBudget.divide(budget, 3, RoundingMode.DOWN));
         return projectDto;
     }
 

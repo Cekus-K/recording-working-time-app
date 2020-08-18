@@ -43,8 +43,9 @@ class ProjectController extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    // TODO: change rest URI
     @DeleteMapping("/projects/{id}")
-    ResponseEntity<Void> deleteUser(@PathVariable Long id) {
+    ResponseEntity<Void> deleteProject(@PathVariable Long id) {
         if (projectService.readProjectById(id).isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
@@ -61,6 +62,7 @@ class ProjectController extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
     }
 
+    // TODO: change rest URI
     @DeleteMapping("/projects/{projectName}")
     ResponseEntity<Void> removeEmployeeFromProject(@PathVariable String projectName, @RequestParam(name = "employee") String employeeLogin) {
         boolean assignmentResult = projectService.removeEmployeeFromProject(employeeLogin, projectName);
