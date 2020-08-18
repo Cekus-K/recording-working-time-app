@@ -76,13 +76,12 @@ public class ProjectService {
 
     public BigDecimal calculateBudget(String projectName) {
         Project project = findProjectByProjectName(projectName);
-        return project.getBudget().subtract(project.getUsers().stream().map(user -> {
-            long userWorkingTimeInSeconds = user.getWorkingTimes().stream()
-                    .filter(workingTime -> workingTime.getProject().getProjectName().equals(projectName))
-                    .map(workingTime -> Duration.between(workingTime.getStartTime(), workingTime.getEndTime()).toSeconds())
-                    .mapToLong(Long::longValue).sum();
-            return user.getCostPerHour().multiply(BigDecimal.valueOf(userWorkingTimeInSeconds / 3600));
-        }).reduce(BigDecimal.ZERO, BigDecimal::add));
+        return project.getBudget().subtract(project.getWorkingTimes().stream()
+                .map(workingTime -> {
+                    BigDecimal costPerHour = workingTime.getUser().getCostPerHour();
+                    long userWorkingTimeInSeconds = Duration.between(workingTime.getStartTime(), workingTime.getEndTime()).toSeconds();
+                    return costPerHour.multiply(BigDecimal.valueOf(userWorkingTimeInSeconds / 3600));
+                }).reduce(BigDecimal.ZERO, BigDecimal::add));
     }
 
     public void updateProject(Long id, ProjectCreateForm projectCreateForm) {

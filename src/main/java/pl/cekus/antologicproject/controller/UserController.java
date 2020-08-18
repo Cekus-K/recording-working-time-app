@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import pl.cekus.antologicproject.dto.UserDto;
+import pl.cekus.antologicproject.dto.UserReportDto;
 import pl.cekus.antologicproject.form.UserCreateForm;
 import pl.cekus.antologicproject.form.UserFilterForm;
 import pl.cekus.antologicproject.service.UserService;
@@ -50,5 +51,11 @@ class UserController extends ResponseEntityExceptionHandler {
         }
         userService.deleteUser(id);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
+    }
+
+    @GetMapping("/users/report")
+    UserReportDto getUserReport(@RequestParam(name = "employee") String login,
+                                @RequestParam(name = "time-period", defaultValue = "all") String timePeriod) {
+        return userService.getUserReport(login, timePeriod);
     }
 }
