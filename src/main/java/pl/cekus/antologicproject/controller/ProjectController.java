@@ -13,6 +13,7 @@ import pl.cekus.antologicproject.form.ProjectFilterForm;
 import pl.cekus.antologicproject.service.ProjectService;
 
 import javax.validation.Valid;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api")
@@ -35,22 +36,22 @@ class ProjectController extends ResponseEntityExceptionHandler {
         return projectService.readProjectsWithFilters(projectFilterForm, pageable);
     }
 
-    @PutMapping("/projects/{id}")
-    ResponseEntity<Void> updateProject(@PathVariable Long id, @RequestBody @Valid ProjectCreateForm project) {
-        if (projectService.readProjectById(id).isEmpty()) {
+    @PutMapping("/projects/{uuid}")
+    ResponseEntity<Void> updateProject(@PathVariable UUID uuid, @RequestBody @Valid ProjectCreateForm project) {
+        if (projectService.readProjectByUuid(uuid).isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        projectService.updateProject(id, project);
+        projectService.updateProject(uuid, project);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     // TODO: change rest URI
-    @DeleteMapping("/projects/{id}")
-    ResponseEntity<Void> deleteProject(@PathVariable Long id) {
-        if (projectService.readProjectById(id).isEmpty()) {
+    @DeleteMapping("/projects/{uuid}")
+    ResponseEntity<Void> deleteProject(@PathVariable UUID uuid) {
+        if (projectService.readProjectByUuid(uuid).isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        projectService.deleteProject(id);
+        projectService.deleteProject(uuid);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

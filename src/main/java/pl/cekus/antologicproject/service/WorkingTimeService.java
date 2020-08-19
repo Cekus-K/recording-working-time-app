@@ -10,6 +10,7 @@ import pl.cekus.antologicproject.model.WorkingTime;
 import pl.cekus.antologicproject.repository.WorkingTimeRepository;
 
 import java.util.List;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 @Service
@@ -48,15 +49,15 @@ public class WorkingTimeService {
     }
 
     // TODO: validation of time period overlapping
-    public void updateWorkingTime(Long id, WorkingTimeCreateForm workingTimeCreateForm) {
-        WorkingTime toUpdate = workingTimeRepository.findById(id)
+    public void updateWorkingTime(UUID uuid, WorkingTimeCreateForm workingTimeCreateForm) {
+        WorkingTime toUpdate = workingTimeRepository.findByUuid(uuid)
                 .orElseThrow(() -> new IllegalArgumentException("provided working time id not found"));
         setValuesToUpdatingWorkingTime(toUpdate, workingTimeCreateForm);
         workingTimeRepository.save(toUpdate);
     }
 
-    public void deleteWorkingTime(Long id) {
-        WorkingTime toDelete = workingTimeRepository.findById(id)
+    public void deleteWorkingTime(UUID uuid) {
+        WorkingTime toDelete = workingTimeRepository.findByUuid(uuid)
                 .orElseThrow(() -> new IllegalArgumentException("provided working time id not found"));
         User user = toDelete.getUser();
         user.removeWorkingTime(toDelete);

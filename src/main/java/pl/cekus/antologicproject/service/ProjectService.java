@@ -19,10 +19,10 @@ import java.math.RoundingMode;
 import java.time.Duration;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
-import static pl.cekus.antologicproject.utills.ReportUtil.TimePeriod;
-import static pl.cekus.antologicproject.utills.ReportUtil.calculateUserTimeInProject;
+import static pl.cekus.antologicproject.utills.ReportUtil.*;
 
 
 @Service
@@ -70,8 +70,8 @@ public class ProjectService {
         return false;
     }
 
-    public Optional<Project> readProjectById(Long id) {
-        return projectRepository.findById(id);
+    public Optional<Project> readProjectByUuid(UUID uuid) {
+        return projectRepository.findByUuid(uuid);
     }
 
     public Page<ProjectDto> readProjectsWithFilters(ProjectFilterForm filterForm, Pageable pageable) {
@@ -83,16 +83,16 @@ public class ProjectService {
 
     public BigDecimal calculateBudget(String projectName) {
         Project project = findProjectByProjectName(projectName);
-        return project.getBudget().subtract(project.getWorkingTimes().stream()
+        return project.getBudget().subtract(BigDecimal.valueOf(project.getWorkingTimes().stream()
                 .map(workingTime -> {
                     BigDecimal costPerHour = workingTime.getUser().getCostPerHour();
-                    long userWorkingTimeInSeconds = Duration.between(workingTime.getStartTime(), workingTime.getEndTime()).toSeconds();
-                    return costPerHour.multiply(BigDecimal.valueOf(userWorkingTimeInSeconds / 3600));
-                }).reduce(BigDecimal.ZERO, BigDecimal::add));
+                    double userWorkingTimeInSeconds = Duration.between(workingTime.getStartTime(), workingTime.getEndTime()).toSeconds();
+                    return costPerHour.multiply(BigDecimal.valueOf(userWorkingTimeInSeconds / 3600).setScale(2, RoundingMode.CEILING));
+                }).mapToDouble(BigDecimal::doubleValue).sum()));
     }
 
-    public void updateProject(Long id, ProjectCreateForm projectCreateForm) {
-        Optional<Project> toUpdate = projectRepository.findById(id);
+    public void updateProject(UUID uuid, ProjectCreateForm projectCreateForm) {
+        Optional<Project> toUpdate = projectRepository.findByUuid(uuid);
         toUpdate.ifPresent(project -> {
             if (!project.getProjectName().equals(projectCreateForm.getProjectName())) {
                 checkIfProjectNameAlreadyExists(projectCreateForm.getProjectName());
@@ -102,12 +102,12 @@ public class ProjectService {
         });
     }
 
-    public void deleteProject(Long id) {
-        readProjectById(id).ifPresent(project -> project.getUsers()
+    public void deleteProject(UUID uuid) {
+        readProjectByUuid(uuid).ifPresent(project -> project.getUsers()
                 .stream()
                 .map(User::getLogin)
                 .forEach((login) -> removeEmployeeFromProject(login, project.getProjectName())));
-        projectRepository.deleteById(id);
+        projectRepository.deleteByUuid(uuid);
     }
 
     public Project findProjectByProjectName(String projectName) {
@@ -118,19 +118,22 @@ public class ProjectService {
     public ProjectReportDto getProjectReport(String projectName, String timePeriod) {
         TimePeriod period = TimePeriod.valueOf(timePeriod.toUpperCase());
         Project project = findProjectByProjectName(projectName);
-        BigDecimal totalProjectCost = project.getBudget().subtract(calculateBudget(projectName));
-        double totalProjectTime = project.getWorkingTimes().stream().map(workingTime -> Duration.between(workingTime.getStartTime(), workingTime.getEndTime()).toSeconds())
-                .mapToDouble(Long::longValue).sum() / 3600;
+        BigDecimal totalProjectCost = project.getUsers().stream()
+                .map(user -> calculateUserCostInProject(project, user, period))
+                .reduce(BigDecimal.ZERO, BigDecimal::add);
+        double totalProjectTime = project.getUsers().stream()
+                .map(user -> calculateUserTimeInProject(project, user, period))
+                .mapToDouble(Double::doubleValue).sum();
         boolean projectExceeded = totalProjectCost.compareTo(BigDecimal.ZERO) < 0;
         List<ProjectReportDto.SingleUserInProjectReport> singleReports = project.getUsers().stream()
                 .map(user -> {
                     Double timeInProject = calculateUserTimeInProject(project, user, period);
                     BigDecimal costInProject = user.getCostPerHour().multiply(BigDecimal.valueOf(timeInProject));
                     return new ProjectReportDto.SingleUserInProjectReport(user.getLogin(), timeInProject,
-                            costInProject.setScale(2, RoundingMode.DOWN));
+                            costInProject.setScale(2, RoundingMode.CEILING));
                 })
                 .collect(Collectors.toList());
-        return new ProjectReportDto(totalProjectCost.setScale(2, RoundingMode.DOWN),
+        return new ProjectReportDto(totalProjectCost.setScale(2, RoundingMode.CEILING),
                 totalProjectTime, projectExceeded, singleReports);
     }
 
@@ -141,7 +144,7 @@ public class ProjectService {
             projectDto.setBudgetPercentageUse(BigDecimal.valueOf(0.0));
             return projectDto;
         }
-        projectDto.setBudgetPercentageUse(remainingBudget.divide(budget, 3, RoundingMode.DOWN));
+        projectDto.setBudgetPercentageUse(remainingBudget.divide(budget, 2, RoundingMode.CEILING));
         return projectDto;
     }
 

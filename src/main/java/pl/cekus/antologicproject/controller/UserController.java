@@ -13,6 +13,7 @@ import pl.cekus.antologicproject.form.UserFilterForm;
 import pl.cekus.antologicproject.service.UserService;
 
 import javax.validation.Valid;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api")
@@ -35,21 +36,21 @@ class UserController extends ResponseEntityExceptionHandler {
         return userService.readUsersWithFilters(userFilterForm, pageable);
     }
 
-    @PutMapping("/users/{id}")
-    ResponseEntity<Void> updateUser(@PathVariable Long id, @RequestBody @Valid UserCreateForm user) {
-        if (userService.readUserById(id).isEmpty()) {
+    @PutMapping("/users/{uuid}")
+    ResponseEntity<Void> updateUser(@PathVariable UUID uuid, @RequestBody @Valid UserCreateForm user) {
+        if (userService.readUserByUuid(uuid).isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        userService.updateUser(id, user);
+        userService.updateUser(uuid, user);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @DeleteMapping("/users/{id}")
-    ResponseEntity<Void> deleteUser(@PathVariable Long id) {
-        if (userService.readUserById(id).isEmpty()) {
+    @DeleteMapping("/users/{uuid}")
+    ResponseEntity<Void> deleteUser(@PathVariable UUID uuid) {
+        if (userService.readUserByUuid(uuid).isEmpty()) {
             return new ResponseEntity<>(HttpStatus.NOT_FOUND);
         }
-        userService.deleteUser(id);
+        userService.deleteUser(uuid);
         return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 

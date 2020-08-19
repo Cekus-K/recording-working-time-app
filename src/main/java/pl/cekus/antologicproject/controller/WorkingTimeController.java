@@ -9,6 +9,7 @@ import pl.cekus.antologicproject.service.WorkingTimeService;
 
 import javax.validation.Valid;
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api")
@@ -32,14 +33,14 @@ class WorkingTimeController extends ResponseEntityExceptionHandler {
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @PutMapping("/working-times/{id}")
-    void updateWorkingTime(@PathVariable Long id, @RequestBody @Valid WorkingTimeCreateForm workingTime) {
-        workingTimeService.updateWorkingTime(id, workingTime);
+    @PutMapping("/working-times/{uuid}")
+    void updateWorkingTime(@PathVariable UUID uuid, @RequestBody @Valid WorkingTimeCreateForm workingTime) {
+        workingTimeService.updateWorkingTime(uuid, workingTime);
     }
 
     @ResponseStatus(HttpStatus.NO_CONTENT)
-    @DeleteMapping("/working-times/{id}")
-    void deleteWorkingTime(@PathVariable Long id) {
-        workingTimeService.deleteWorkingTime(id);
+    @DeleteMapping("/working-times/{uuid}")
+    void deleteWorkingTime(@PathVariable UUID uuid) {
+        workingTimeService.deleteWorkingTime(uuid);
     }
 }

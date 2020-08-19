@@ -7,12 +7,15 @@ import lombok.Setter;
 import pl.cekus.antologicproject.model.Role;
 
 import java.math.BigDecimal;
+import java.util.UUID;
 
 @Getter
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
 public class UserDto {
+
+    private UUID uuid;
 
     private String login;
 

@@ -16,6 +16,7 @@ import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
 import java.util.Optional;
+import java.util.UUID;
 import java.util.stream.Collectors;
 
 import static pl.cekus.antologicproject.utills.ReportUtil.*;
@@ -39,8 +40,8 @@ public class UserService {
         return userMapper.mapUserToUserDto(userRepository.save(toCreate));
     }
 
-    public Optional<User> readUserById(Long id) {
-        return userRepository.findById(id);
+    public Optional<User> readUserByUuid(UUID uuid) {
+        return userRepository.findByUuid(uuid);
     }
 
     public Page<UserDto> readUsersWithFilters(UserFilterForm filterForm, Pageable pageable) {
@@ -49,8 +50,8 @@ public class UserService {
                 .map(userMapper::mapUserToUserDto);
     }
 
-    public void updateUser(Long id, UserCreateForm userCreateForm) {
-        Optional<User> toUpdate = userRepository.findById(id);
+    public void updateUser(UUID uuid, UserCreateForm userCreateForm) {
+        Optional<User> toUpdate = userRepository.findByUuid(uuid);
         toUpdate.ifPresent(user -> {
             if (!user.getLogin().equals(userCreateForm.getLogin())) {
                 checkIfLoginAlreadyExists(userCreateForm.getLogin());
@@ -60,8 +61,8 @@ public class UserService {
         });
     }
 
-    public void deleteUser(Long id) {
-        userRepository.deleteById(id);
+    public void deleteUser(UUID uuid) {
+        userRepository.deleteByUuid(uuid);
     }
 
     public UserReportDto getUserReport(String login, String timePeriod) {
@@ -73,13 +74,13 @@ public class UserService {
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
         List<UserReportDto.SingleProjectFromUserReport> singleReports = user.getProjects().stream()
                 .map(project -> {
-                    Double timeInProject = calculateUserTimeInProject(project, user, period);
+                    double timeInProject = calculateUserTimeInProject(project, user, period);
                     BigDecimal costInProject = user.getCostPerHour().multiply(BigDecimal.valueOf(timeInProject));
                     return new UserReportDto.SingleProjectFromUserReport(project.getProjectName(), timeInProject,
-                            costInProject.setScale(2, RoundingMode.DOWN));
+                            costInProject.setScale(2, RoundingMode.CEILING));
                 })
                 .collect(Collectors.toList());
-        return new UserReportDto(totalCost.setScale(2, RoundingMode.DOWN), singleReports);
+        return new UserReportDto(totalCost.setScale(2, RoundingMode.CEILING), singleReports);
     }
 
     User findUserByLogin(String login) {
