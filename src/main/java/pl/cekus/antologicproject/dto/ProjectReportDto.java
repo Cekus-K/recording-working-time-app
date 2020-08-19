@@ -8,14 +8,16 @@ import java.util.List;
 
 @Getter
 @AllArgsConstructor
-public class UserReportDto {
-    private BigDecimal totalUserCost;
-    private List<SingleProjectFromUserReport> projectsFromUser;
+public class ProjectReportDto {
+    private BigDecimal totalProjectCost;
+    private Double totalProjectTime;
+    private Boolean budgetExceeded;
+    private List<SingleUserInProjectReport> usersInProject;
 
     @Getter
     @AllArgsConstructor
-    public static class SingleProjectFromUserReport {
-        private String projectName;
+    public static class SingleUserInProjectReport {
+        private String userLogin;
         private Double timeInProject;
         private BigDecimal costInProject;
     }

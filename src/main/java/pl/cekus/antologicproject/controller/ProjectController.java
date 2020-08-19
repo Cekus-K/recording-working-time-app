@@ -7,6 +7,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import pl.cekus.antologicproject.dto.ProjectDto;
+import pl.cekus.antologicproject.dto.ProjectReportDto;
 import pl.cekus.antologicproject.form.ProjectCreateForm;
 import pl.cekus.antologicproject.form.ProjectFilterForm;
 import pl.cekus.antologicproject.service.ProjectService;
@@ -70,5 +71,11 @@ class ProjectController extends ResponseEntityExceptionHandler {
             return new ResponseEntity<>(HttpStatus.NO_CONTENT);
         }
         return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    }
+
+    @GetMapping("/projects/report")
+    ProjectReportDto getProjectReport(@RequestParam(name = "project") String projectName,
+                                      @RequestParam(name = "time-period", defaultValue = "all") String timePeriod) {
+        return projectService.getProjectReport(projectName, timePeriod);
     }
 }

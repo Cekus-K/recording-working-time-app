@@ -3,11 +3,11 @@ package pl.cekus.antologicproject.service;
 import org.springframework.stereotype.Service;
 import pl.cekus.antologicproject.dto.WorkingTimeDto;
 import pl.cekus.antologicproject.form.WorkingTimeCreateForm;
+import pl.cekus.antologicproject.mapper.WorkingTimeMapper;
 import pl.cekus.antologicproject.model.Project;
 import pl.cekus.antologicproject.model.User;
 import pl.cekus.antologicproject.model.WorkingTime;
 import pl.cekus.antologicproject.repository.WorkingTimeRepository;
-import pl.cekus.antologicproject.utills.WorkingTimeMapper;
 
 import java.util.List;
 import java.util.stream.Collectors;

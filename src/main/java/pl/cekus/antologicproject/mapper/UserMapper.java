@@ -1,4 +1,4 @@
-package pl.cekus.antologicproject.utills;
+package pl.cekus.antologicproject.mapper;
 
 import org.mapstruct.Mapper;
 import pl.cekus.antologicproject.dto.UserDto;

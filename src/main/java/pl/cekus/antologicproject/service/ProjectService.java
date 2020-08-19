@@ -4,19 +4,26 @@ import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pl.cekus.antologicproject.dto.ProjectDto;
+import pl.cekus.antologicproject.dto.ProjectReportDto;
 import pl.cekus.antologicproject.form.ProjectCreateForm;
 import pl.cekus.antologicproject.form.ProjectFilterForm;
+import pl.cekus.antologicproject.mapper.ProjectMapper;
 import pl.cekus.antologicproject.model.Project;
 import pl.cekus.antologicproject.model.Role;
 import pl.cekus.antologicproject.model.User;
 import pl.cekus.antologicproject.repository.ProjectRepository;
 import pl.cekus.antologicproject.specification.ProjectSpecification;
-import pl.cekus.antologicproject.utills.ProjectMapper;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
+import java.util.List;
 import java.util.Optional;
+import java.util.stream.Collectors;
+
+import static pl.cekus.antologicproject.utills.ReportUtil.TimePeriod;
+import static pl.cekus.antologicproject.utills.ReportUtil.calculateUserTimeInProject;
+
 
 @Service
 public class ProjectService {
@@ -106,6 +113,25 @@ public class ProjectService {
     public Project findProjectByProjectName(String projectName) {
         return projectRepository.findByProjectName(projectName)
                 .orElseThrow(() -> new IllegalArgumentException("provided project not found"));
+    }
+
+    public ProjectReportDto getProjectReport(String projectName, String timePeriod) {
+        TimePeriod period = TimePeriod.valueOf(timePeriod.toUpperCase());
+        Project project = findProjectByProjectName(projectName);
+        BigDecimal totalProjectCost = project.getBudget().subtract(calculateBudget(projectName));
+        double totalProjectTime = project.getWorkingTimes().stream().map(workingTime -> Duration.between(workingTime.getStartTime(), workingTime.getEndTime()).toSeconds())
+                .mapToDouble(Long::longValue).sum() / 3600;
+        boolean projectExceeded = totalProjectCost.compareTo(BigDecimal.ZERO) < 0;
+        List<ProjectReportDto.SingleUserInProjectReport> singleReports = project.getUsers().stream()
+                .map(user -> {
+                    Double timeInProject = calculateUserTimeInProject(project, user, period);
+                    BigDecimal costInProject = user.getCostPerHour().multiply(BigDecimal.valueOf(timeInProject));
+                    return new ProjectReportDto.SingleUserInProjectReport(user.getLogin(), timeInProject,
+                            costInProject.setScale(2, RoundingMode.DOWN));
+                })
+                .collect(Collectors.toList());
+        return new ProjectReportDto(totalProjectCost.setScale(2, RoundingMode.DOWN),
+                totalProjectTime, projectExceeded, singleReports);
     }
 
     private ProjectDto setBudgetPercentageUse(ProjectDto projectDto) {
