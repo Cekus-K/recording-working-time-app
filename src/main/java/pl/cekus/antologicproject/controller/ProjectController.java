@@ -3,7 +3,6 @@ package pl.cekus.antologicproject.controller;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import pl.cekus.antologicproject.dto.ProjectDto;
@@ -37,41 +36,26 @@ class ProjectController extends ResponseEntityExceptionHandler {
     }
 
     @PutMapping("/projects/{uuid}")
-    ResponseEntity<Void> updateProject(@PathVariable UUID uuid, @RequestBody @Valid ProjectCreateForm project) {
-        if (projectService.readProjectByUuid(uuid).isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    void updateProject(@PathVariable UUID uuid, @RequestBody @Valid ProjectCreateForm project) {
         projectService.updateProject(uuid, project);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    // TODO: change rest URI
     @DeleteMapping("/projects/{uuid}")
-    ResponseEntity<Void> deleteProject(@PathVariable UUID uuid) {
-        if (projectService.readProjectByUuid(uuid).isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    void deleteProject(@PathVariable UUID uuid) {
         projectService.deleteProject(uuid);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
-    @PostMapping("/projects/{projectName}")
-    ResponseEntity<Void> addEmployeeToProject(@PathVariable String projectName, @RequestParam(name = "employee") String employeeLogin) {
-        boolean assignmentResult = projectService.addEmployeeToProject(employeeLogin, projectName);
-        if (assignmentResult) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    @PutMapping("/projects")
+    void addEmployeeToProject(@RequestParam(name = "project-name") String projectName,
+                              @RequestParam(name = "employee") String employeeLogin) {
+        projectService.addEmployeeToProject(projectName, employeeLogin);
     }
 
-    // TODO: change rest URI
-    @DeleteMapping("/projects/{projectName}")
-    ResponseEntity<Void> removeEmployeeFromProject(@PathVariable String projectName, @RequestParam(name = "employee") String employeeLogin) {
-        boolean assignmentResult = projectService.removeEmployeeFromProject(employeeLogin, projectName);
-        if (assignmentResult) {
-            return new ResponseEntity<>(HttpStatus.NO_CONTENT);
-        }
-        return new ResponseEntity<>(HttpStatus.BAD_REQUEST);
+    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @DeleteMapping("/projects")
+    void removeEmployeeFromProject(@RequestParam(name = "project-name") String projectName,
+                                   @RequestParam(name = "employee") String employeeLogin) {
+        projectService.removeEmployeeFromProject(employeeLogin, projectName);
     }
 
     @GetMapping("/projects/report")

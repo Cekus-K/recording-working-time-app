@@ -5,6 +5,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pl.cekus.antologicproject.dto.ProjectDto;
 import pl.cekus.antologicproject.dto.ProjectReportDto;
+import pl.cekus.antologicproject.exception.IllegalParameterException;
+import pl.cekus.antologicproject.exception.NotFoundException;
+import pl.cekus.antologicproject.exception.NotUniqueException;
 import pl.cekus.antologicproject.form.ProjectCreateForm;
 import pl.cekus.antologicproject.form.ProjectFilterForm;
 import pl.cekus.antologicproject.mapper.ProjectMapper;
@@ -40,34 +43,30 @@ public class ProjectService {
 
     public ProjectDto createProject(ProjectCreateForm projectCreateForm) {
         if (projectRepository.findByProjectName(projectCreateForm.getProjectName()).isPresent()) {
-            throw new IllegalArgumentException("provided project name already exists");
+            throw new NotUniqueException("provided project name already exists");
         }
         Project toCreate = projectMapper.mapProjectCreateFormToProject(projectCreateForm);
         return projectMapper.mapProjectToProjectDto(projectRepository.save(toCreate));
     }
 
-    public boolean addEmployeeToProject(String login, String projectName) {
+    public void addEmployeeToProject(String projectName, String login) {
         User user = userService.findUserByLogin(login);
         Project project = findProjectByProjectName(projectName);
-
-        if (user.getRole() == Role.EMPLOYEE) {
-            project.addUser(user);
-            projectRepository.save(project);
-            return true;
+        if (user.getRole() != Role.EMPLOYEE) {
+            throw new IllegalParameterException("user assigned to the project must be an employee");
         }
-        return false;
+        project.addUser(user);
+        projectRepository.save(project);
     }
 
-    public boolean removeEmployeeFromProject(String login, String projectName) {
+    public void removeEmployeeFromProject(String login, String projectName) {
         User user = userService.findUserByLogin(login);
         Project project = findProjectByProjectName(projectName);
-
-        if (user.getRole() == Role.EMPLOYEE) {
-            project.removeUser(user);
-            projectRepository.save(project);
-            return true;
+        if (user.getRole() != Role.EMPLOYEE) {
+            throw new IllegalParameterException("user removed from a project must be an employee");
         }
-        return false;
+        project.removeUser(user);
+        projectRepository.save(project);
     }
 
     public Optional<Project> readProjectByUuid(UUID uuid) {
@@ -78,45 +77,41 @@ public class ProjectService {
         ProjectSpecification specification = new ProjectSpecification(filterForm);
         return projectRepository.findAll(specification, pageable)
                 .map(projectMapper::mapProjectToProjectDto)
-                .map(this::setBudgetPercentageUse);
-    }
-
-    public BigDecimal calculateBudget(String projectName) {
-        Project project = findProjectByProjectName(projectName);
-        return project.getBudget().subtract(BigDecimal.valueOf(project.getWorkingTimes().stream()
-                .map(workingTime -> {
-                    BigDecimal costPerHour = workingTime.getUser().getCostPerHour();
-                    double userWorkingTimeInSeconds = Duration.between(workingTime.getStartTime(), workingTime.getEndTime()).toSeconds();
-                    return costPerHour.multiply(BigDecimal.valueOf(userWorkingTimeInSeconds / 3600).setScale(2, RoundingMode.CEILING));
-                }).mapToDouble(BigDecimal::doubleValue).sum()));
+                .map(this::calculatePercentageBudget);
     }
 
     public void updateProject(UUID uuid, ProjectCreateForm projectCreateForm) {
-        Optional<Project> toUpdate = projectRepository.findByUuid(uuid);
-        toUpdate.ifPresent(project -> {
-            if (!project.getProjectName().equals(projectCreateForm.getProjectName())) {
-                checkIfProjectNameAlreadyExists(projectCreateForm.getProjectName());
-            }
-            setValuesToUpdatingProject(project, projectCreateForm);
-            projectRepository.save(project);
-        });
+        Project toUpdate = projectRepository.findByUuid(uuid)
+                .orElseThrow(() -> new NotFoundException("provided project uuid not found"));
+        if (!toUpdate.getProjectName().equals(projectCreateForm.getProjectName())) {
+            checkIfProjectNameAlreadyExists(projectCreateForm.getProjectName());
+        }
+        setValuesToUpdatingProject(toUpdate, projectCreateForm);
+        projectRepository.save(toUpdate);
     }
 
     public void deleteProject(UUID uuid) {
-        readProjectByUuid(uuid).ifPresent(project -> project.getUsers()
+        Project toDelete = readProjectByUuid(uuid)
+                .orElseThrow(() -> new NotFoundException("provided project uuid not found"));
+        toDelete.getUsers()
                 .stream()
                 .map(User::getLogin)
-                .forEach((login) -> removeEmployeeFromProject(login, project.getProjectName())));
+                .forEach((login) -> removeEmployeeFromProject(login, toDelete.getProjectName()));
         projectRepository.deleteByUuid(uuid);
     }
 
     public Project findProjectByProjectName(String projectName) {
         return projectRepository.findByProjectName(projectName)
-                .orElseThrow(() -> new IllegalArgumentException("provided project not found"));
+                .orElseThrow(() -> new NotFoundException("provided project not found"));
     }
 
     public ProjectReportDto getProjectReport(String projectName, String timePeriod) {
-        TimePeriod period = TimePeriod.valueOf(timePeriod.toUpperCase());
+        TimePeriod period;
+        try {
+            period = TimePeriod.valueOf(timePeriod.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalParameterException("invalid time period type was provided");
+        }
         Project project = findProjectByProjectName(projectName);
         BigDecimal totalProjectCost = project.getUsers().stream()
                 .map(user -> calculateUserCostInProject(project, user, period))
@@ -137,15 +132,21 @@ public class ProjectService {
                 totalProjectTime, projectExceeded, singleReports);
     }
 
-    private ProjectDto setBudgetPercentageUse(ProjectDto projectDto) {
-        BigDecimal budget = projectDto.getBudget();
-        BigDecimal remainingBudget = calculateBudget(projectDto.getProjectName());
-        if (remainingBudget.equals(budget)) {
-            projectDto.setBudgetPercentageUse(BigDecimal.valueOf(0.0));
-            return projectDto;
-        }
-        projectDto.setBudgetPercentageUse(remainingBudget.divide(budget, 2, RoundingMode.CEILING));
+    private ProjectDto calculatePercentageBudget(ProjectDto projectDto) {
+        projectDto.setBudgetPercentageUse(calculateBudget(projectDto.getProjectName())
+                .multiply(BigDecimal.valueOf(100))
+                .divide(projectDto.getBudget(), 2, RoundingMode.CEILING));
         return projectDto;
+    }
+
+    private BigDecimal calculateBudget(String projectName) {
+        Project project = findProjectByProjectName(projectName);
+        return BigDecimal.valueOf(project.getWorkingTimes().stream()
+                .map(workingTime -> {
+                    BigDecimal costPerHour = workingTime.getUser().getCostPerHour();
+                    double userWorkingTimeInSeconds = Duration.between(workingTime.getStartTime(), workingTime.getEndTime()).toSeconds();
+                    return costPerHour.multiply(BigDecimal.valueOf(userWorkingTimeInSeconds / 3600).setScale(2, RoundingMode.CEILING));
+                }).mapToDouble(BigDecimal::doubleValue).sum());
     }
 
     private void setValuesToUpdatingProject(Project toUpdate, ProjectCreateForm createForm) {
@@ -156,10 +157,9 @@ public class ProjectService {
         toUpdate.setBudget(createForm.getBudget());
     }
 
-    // FIXME: write own exceptions
     private void checkIfProjectNameAlreadyExists(String projectName) {
         if (projectRepository.findByProjectName(projectName).isPresent()) {
-            throw new IllegalStateException("provided project name already exists");
+            throw new NotUniqueException("provided project name already exists");
         }
     }
 }

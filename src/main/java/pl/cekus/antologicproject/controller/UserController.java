@@ -3,7 +3,6 @@ package pl.cekus.antologicproject.controller;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import pl.cekus.antologicproject.dto.UserDto;
@@ -37,21 +36,14 @@ class UserController extends ResponseEntityExceptionHandler {
     }
 
     @PutMapping("/users/{uuid}")
-    ResponseEntity<Void> updateUser(@PathVariable UUID uuid, @RequestBody @Valid UserCreateForm user) {
-        if (userService.readUserByUuid(uuid).isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    void updateUser(@PathVariable UUID uuid, @RequestBody @Valid UserCreateForm user) {
         userService.updateUser(uuid, user);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
+    @ResponseStatus(HttpStatus.NO_CONTENT)
     @DeleteMapping("/users/{uuid}")
-    ResponseEntity<Void> deleteUser(@PathVariable UUID uuid) {
-        if (userService.readUserByUuid(uuid).isEmpty()) {
-            return new ResponseEntity<>(HttpStatus.NOT_FOUND);
-        }
+    void deleteUser(@PathVariable UUID uuid) {
         userService.deleteUser(uuid);
-        return new ResponseEntity<>(HttpStatus.NO_CONTENT);
     }
 
     @GetMapping("/users/report")

@@ -2,6 +2,7 @@ package pl.cekus.antologicproject.service;
 
 import org.springframework.stereotype.Service;
 import pl.cekus.antologicproject.dto.WorkingTimeDto;
+import pl.cekus.antologicproject.exception.NotFoundException;
 import pl.cekus.antologicproject.form.WorkingTimeCreateForm;
 import pl.cekus.antologicproject.mapper.WorkingTimeMapper;
 import pl.cekus.antologicproject.model.Project;
@@ -34,7 +35,7 @@ public class WorkingTimeService {
         User user = userService.findUserByLogin(createForm.getUserLogin());
         Project project = projectService.findProjectByProjectName(createForm.getProjectName());
         if (!user.getProjects().contains(project)) {
-            throw new IllegalArgumentException("the given employee is not assigned to given project");
+            throw new NotFoundException("the given employee is not assigned to given project");
         }
         WorkingTime workingTime = new WorkingTime(createForm.getStartTime(), createForm.getEndTime(), user, project);
         user.addWorkingTime(workingTime);
@@ -51,14 +52,14 @@ public class WorkingTimeService {
     // TODO: validation of time period overlapping
     public void updateWorkingTime(UUID uuid, WorkingTimeCreateForm workingTimeCreateForm) {
         WorkingTime toUpdate = workingTimeRepository.findByUuid(uuid)
-                .orElseThrow(() -> new IllegalArgumentException("provided working time id not found"));
+                .orElseThrow(() -> new NotFoundException("provided working time uuid not found"));
         setValuesToUpdatingWorkingTime(toUpdate, workingTimeCreateForm);
         workingTimeRepository.save(toUpdate);
     }
 
     public void deleteWorkingTime(UUID uuid) {
         WorkingTime toDelete = workingTimeRepository.findByUuid(uuid)
-                .orElseThrow(() -> new IllegalArgumentException("provided working time id not found"));
+                .orElseThrow(() -> new NotFoundException("provided working time uuid not found"));
         User user = toDelete.getUser();
         user.removeWorkingTime(toDelete);
         workingTimeRepository.delete(toDelete);

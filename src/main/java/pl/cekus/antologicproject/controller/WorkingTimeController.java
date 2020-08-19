@@ -32,7 +32,7 @@ class WorkingTimeController extends ResponseEntityExceptionHandler {
         return workingTimeService.readAllWorkingTimes(employee);
     }
 
-    @ResponseStatus(HttpStatus.NO_CONTENT)
+    @ResponseStatus(HttpStatus.OK)
     @PutMapping("/working-times/{uuid}")
     void updateWorkingTime(@PathVariable UUID uuid, @RequestBody @Valid WorkingTimeCreateForm workingTime) {
         workingTimeService.updateWorkingTime(uuid, workingTime);

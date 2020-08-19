@@ -1,6 +1,7 @@
 package pl.cekus.antologicproject.specification;
 
 import org.springframework.data.jpa.domain.Specification;
+import pl.cekus.antologicproject.exception.IllegalParameterException;
 import pl.cekus.antologicproject.form.UserFilterForm;
 import pl.cekus.antologicproject.model.Role;
 import pl.cekus.antologicproject.model.User;
@@ -42,7 +43,7 @@ public class UserSpecification implements Specification<User> {
                 Role userRole = userFilterForm.getRole();
                 predicates.add(criteriaBuilder.equal(root.get(User_.role), userRole));
             } catch (IllegalArgumentException e) {
-                System.err.println("an invalid user role was provided");
+                throw new IllegalParameterException("an invalid user role was provided");
             }
         }
 

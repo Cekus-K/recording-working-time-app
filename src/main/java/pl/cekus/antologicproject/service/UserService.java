@@ -5,6 +5,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import pl.cekus.antologicproject.dto.UserDto;
 import pl.cekus.antologicproject.dto.UserReportDto;
+import pl.cekus.antologicproject.exception.IllegalParameterException;
+import pl.cekus.antologicproject.exception.NotFoundException;
+import pl.cekus.antologicproject.exception.NotUniqueException;
 import pl.cekus.antologicproject.form.UserCreateForm;
 import pl.cekus.antologicproject.form.UserFilterForm;
 import pl.cekus.antologicproject.mapper.UserMapper;
@@ -15,7 +18,6 @@ import pl.cekus.antologicproject.specification.UserSpecification;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.util.List;
-import java.util.Optional;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -34,14 +36,10 @@ public class UserService {
 
     public UserDto createUser(UserCreateForm userCreateForm) {
         if (userRepository.findByLogin(userCreateForm.getLogin()).isPresent()) {
-            throw new IllegalArgumentException("provided login already exists");
+            throw new NotUniqueException("provided login already exists");
         }
         User toCreate = userMapper.mapUserCreateFormToUser(userCreateForm);
         return userMapper.mapUserToUserDto(userRepository.save(toCreate));
-    }
-
-    public Optional<User> readUserByUuid(UUID uuid) {
-        return userRepository.findByUuid(uuid);
     }
 
     public Page<UserDto> readUsersWithFilters(UserFilterForm filterForm, Pageable pageable) {
@@ -51,22 +49,29 @@ public class UserService {
     }
 
     public void updateUser(UUID uuid, UserCreateForm userCreateForm) {
-        Optional<User> toUpdate = userRepository.findByUuid(uuid);
-        toUpdate.ifPresent(user -> {
-            if (!user.getLogin().equals(userCreateForm.getLogin())) {
-                checkIfLoginAlreadyExists(userCreateForm.getLogin());
-            }
-            setValuesToUpdatingUser(user, userCreateForm);
-            userRepository.save(user);
-        });
+        User toUpdate = userRepository.findByUuid(uuid)
+                .orElseThrow(() -> new NotFoundException("provided user uuid not found"));
+        if (!toUpdate.getLogin().equals(userCreateForm.getLogin())) {
+            checkIfLoginAlreadyExists(userCreateForm.getLogin());
+        }
+        setValuesToUpdatingUser(toUpdate, userCreateForm);
+        userRepository.save(toUpdate);
     }
 
     public void deleteUser(UUID uuid) {
+        if (userRepository.findByUuid(uuid).isEmpty()) {
+            throw new NotFoundException("provided user uuid not found");
+        }
         userRepository.deleteByUuid(uuid);
     }
 
     public UserReportDto getUserReport(String login, String timePeriod) {
-        TimePeriod period = TimePeriod.valueOf(timePeriod.toUpperCase());
+        TimePeriod period;
+        try {
+            period = TimePeriod.valueOf(timePeriod.toUpperCase());
+        } catch (IllegalArgumentException e) {
+            throw new IllegalParameterException("invalid time period type was provided");
+        }
         User user = findUserByLogin(login);
 
         BigDecimal totalCost = user.getProjects().stream()
@@ -85,13 +90,12 @@ public class UserService {
 
     User findUserByLogin(String login) {
         return userRepository.findByLogin(login)
-                .orElseThrow(() -> new IllegalArgumentException("provided user not found"));
+                .orElseThrow(() -> new NotFoundException("provided user not found"));
     }
 
-    // FIXME: write own exceptions
     private void checkIfLoginAlreadyExists(String login) {
         if (userRepository.findByLogin(login).isPresent()) {
-            throw new IllegalStateException("provided login already exists");
+            throw new NotUniqueException("provided login already exists");
         }
     }
 

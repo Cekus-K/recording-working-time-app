@@ -1,5 +1,6 @@
 package pl.cekus.antologicproject.utills;
 
+import pl.cekus.antologicproject.exception.IllegalParameterException;
 import pl.cekus.antologicproject.model.Project;
 import pl.cekus.antologicproject.model.User;
 import pl.cekus.antologicproject.model.WorkingTime;
@@ -20,19 +21,11 @@ public final class ReportUtil {
     }
 
     public static Double calculateUserTimeInProject(Project project, User user, TimePeriod period) {
-        return round(user.getWorkingTimes().stream()
+        return roundToTwoDecimalPlaces(user.getWorkingTimes().stream()
                 .filter(workingTime -> workingTime.getProject().equals(project))
                 .filter(workingTime -> filterWorkingTimesByPeriod(workingTime, period))
                 .map(workingTime -> Duration.between(workingTime.getStartTime(), workingTime.getEndTime()).toSeconds())
-                .mapToDouble(Long::longValue).sum() / 3600, 2);
-    }
-
-    public static double round(double value, int places) {
-        if (places < 0) throw new IllegalArgumentException();
-
-        BigDecimal bd = BigDecimal.valueOf(value);
-        bd = bd.setScale(places, RoundingMode.CEILING);
-        return bd.doubleValue();
+                .mapToDouble(Long::longValue).sum() / 3600);
     }
 
     private static boolean filterWorkingTimesByPeriod(WorkingTime workingTime, TimePeriod period) {
@@ -47,8 +40,14 @@ public final class ReportUtil {
             case ALL:
                 return true;
             default:
-                throw new IllegalArgumentException("invalid time period type");
+                throw new IllegalParameterException("invalid time period type was provided");
         }
+    }
+
+    private static double roundToTwoDecimalPlaces(double value) {
+        BigDecimal bd = BigDecimal.valueOf(value);
+        bd = bd.setScale(2, RoundingMode.CEILING);
+        return bd.doubleValue();
     }
 
     public enum TimePeriod {
