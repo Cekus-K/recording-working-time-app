@@ -53,7 +53,7 @@ public class WorkingTimeService {
     public void updateWorkingTime(UUID uuid, WorkingTimeCreateForm workingTimeCreateForm) {
         WorkingTime toUpdate = workingTimeRepository.findByUuid(uuid)
                 .orElseThrow(() -> new NotFoundException("provided working time uuid not found"));
-        setValuesToUpdatingWorkingTime(toUpdate, workingTimeCreateForm);
+        workingTimeMapper.fromWorkingTimeCreateFormToWorkingTime(workingTimeCreateForm, toUpdate);
         workingTimeRepository.save(toUpdate);
     }
 
@@ -63,11 +63,5 @@ public class WorkingTimeService {
         User user = toDelete.getUser();
         user.removeWorkingTime(toDelete);
         workingTimeRepository.delete(toDelete);
-    }
-
-    private void setValuesToUpdatingWorkingTime(WorkingTime toUpdate, WorkingTimeCreateForm createForm) {
-        toUpdate.setStartTime(createForm.getStartTime());
-        toUpdate.setEndTime(createForm.getEndTime());
-        toUpdate.setProject(projectService.findProjectByProjectName(createForm.getProjectName()));
     }
 }

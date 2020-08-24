@@ -1,15 +1,12 @@
 package pl.cekus.antologicproject.utills;
 
-import pl.cekus.antologicproject.exception.IllegalParameterException;
 import pl.cekus.antologicproject.model.Project;
 import pl.cekus.antologicproject.model.User;
-import pl.cekus.antologicproject.model.WorkingTime;
+import pl.cekus.antologicproject.timeperiod.TimePeriod;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.Duration;
-import java.time.LocalDateTime;
-import java.time.temporal.ChronoUnit;
 
 public final class ReportUtil {
 
@@ -21,36 +18,16 @@ public final class ReportUtil {
     }
 
     public static Double calculateUserTimeInProject(Project project, User user, TimePeriod period) {
-        return roundToTwoDecimalPlaces(user.getWorkingTimes().stream()
-                .filter(workingTime -> workingTime.getProject().equals(project))
-                .filter(workingTime -> filterWorkingTimesByPeriod(workingTime, period))
+        return roundToTwoDecimalPlaces(project.getWorkingTimes().stream()
+                .filter(workingTime -> workingTime.getUser().equals(user))
+                .filter(workingTime -> period == null || TimePeriod.isCorrectPeriod(period, workingTime))
                 .map(workingTime -> Duration.between(workingTime.getStartTime(), workingTime.getEndTime()).toSeconds())
                 .mapToDouble(Long::longValue).sum() / 3600);
-    }
-
-    private static boolean filterWorkingTimesByPeriod(WorkingTime workingTime, TimePeriod period) {
-        switch (period) {
-            case WEEK:
-                // TODO: checking if it's the same week
-                return ChronoUnit.WEEKS.between(workingTime.getStartTime(), LocalDateTime.now()) == 0;
-            case MONTH:
-                return workingTime.getStartTime().getMonthValue() == LocalDateTime.now().getMonthValue();
-            case YEAR:
-                return workingTime.getStartTime().getYear() == LocalDateTime.now().getYear();
-            case ALL:
-                return true;
-            default:
-                throw new IllegalParameterException("invalid time period type was provided");
-        }
     }
 
     private static double roundToTwoDecimalPlaces(double value) {
         BigDecimal bd = BigDecimal.valueOf(value);
         bd = bd.setScale(2, RoundingMode.CEILING);
         return bd.doubleValue();
-    }
-
-    public enum TimePeriod {
-        WEEK, MONTH, YEAR, ALL;
     }
 }

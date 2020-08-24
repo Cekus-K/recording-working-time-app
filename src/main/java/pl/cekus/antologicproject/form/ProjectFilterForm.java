@@ -2,10 +2,9 @@ package pl.cekus.antologicproject.form;
 
 import lombok.AllArgsConstructor;
 import lombok.Getter;
-import pl.cekus.antologicproject.model.User;
 
 import java.time.LocalDate;
-import java.util.Set;
+import java.util.List;
 
 @Getter
 @AllArgsConstructor
@@ -17,7 +16,7 @@ public class ProjectFilterForm {
 
     private LocalDate endDate;
 
-    private Set<User> users;
+    private List<String> users;
 
     private Boolean budgetExceeded;
 }

@@ -10,6 +10,7 @@ import pl.cekus.antologicproject.dto.UserReportDto;
 import pl.cekus.antologicproject.form.UserCreateForm;
 import pl.cekus.antologicproject.form.UserFilterForm;
 import pl.cekus.antologicproject.service.UserService;
+import pl.cekus.antologicproject.timeperiod.TimePeriod;
 
 import javax.validation.Valid;
 import java.util.UUID;
@@ -48,7 +49,7 @@ class UserController extends ResponseEntityExceptionHandler {
 
     @GetMapping("/users/report")
     UserReportDto getUserReport(@RequestParam(name = "employee") String login,
-                                @RequestParam(name = "time-period", defaultValue = "all") String timePeriod) {
+                                @RequestParam(name = "time-period", required = false) TimePeriod timePeriod) {
         return userService.getUserReport(login, timePeriod);
     }
 }

@@ -6,22 +6,13 @@ import lombok.Setter;
 
 import javax.persistence.*;
 import java.time.LocalDateTime;
-import java.util.UUID;
 
 @Entity
 @Table(name = "working_times")
 @Getter
 @Setter
 @NoArgsConstructor
-public class WorkingTime {
-
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name = "id", unique = true, nullable = false)
-    private Long id;
-
-    @Column(name = "uuid", unique = true, nullable = false)
-    private final UUID uuid = UUID.randomUUID();
+public class WorkingTime extends AbstractEntity {
 
     @Column(name = "start_time")
     private LocalDateTime startTime;
@@ -29,11 +20,11 @@ public class WorkingTime {
     @Column(name = "end_time")
     private LocalDateTime endTime;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "user_id")
     private User user;
 
-    @ManyToOne
+    @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "project_id")
     private Project project;
 

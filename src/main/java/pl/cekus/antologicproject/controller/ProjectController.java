@@ -7,9 +7,11 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 import pl.cekus.antologicproject.dto.ProjectDto;
 import pl.cekus.antologicproject.dto.ProjectReportDto;
+import pl.cekus.antologicproject.dto.ProjectViewDto;
 import pl.cekus.antologicproject.form.ProjectCreateForm;
 import pl.cekus.antologicproject.form.ProjectFilterForm;
 import pl.cekus.antologicproject.service.ProjectService;
+import pl.cekus.antologicproject.timeperiod.TimePeriod;
 
 import javax.validation.Valid;
 import java.util.UUID;
@@ -31,7 +33,7 @@ class ProjectController extends ResponseEntityExceptionHandler {
     }
 
     @GetMapping("/projects")
-    Page<ProjectDto> filterProject(@RequestBody ProjectFilterForm projectFilterForm, Pageable pageable) {
+    Page<ProjectViewDto> filterProject(@RequestBody ProjectFilterForm projectFilterForm, Pageable pageable) {
         return projectService.readProjectsWithFilters(projectFilterForm, pageable);
     }
 
@@ -60,7 +62,7 @@ class ProjectController extends ResponseEntityExceptionHandler {
 
     @GetMapping("/projects/report")
     ProjectReportDto getProjectReport(@RequestParam(name = "project") String projectName,
-                                      @RequestParam(name = "time-period", defaultValue = "all") String timePeriod) {
+                                      @RequestParam(name = "time-period", required = false) TimePeriod timePeriod) {
         return projectService.getProjectReport(projectName, timePeriod);
     }
 }
