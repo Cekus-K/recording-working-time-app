@@ -44,7 +44,7 @@ public class User extends AbstractEntity {
     private Set<Project> projects = new HashSet<>();
 
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<WorkingTime> workingTimes;
+    private Set<WorkingTime> workingTimes = new HashSet<>();
 
     public User(String login, String firstName, String lastName, Role role, String password, String email, BigDecimal costPerHour) {
         this.login = login;
@@ -64,10 +64,12 @@ public class User extends AbstractEntity {
     public void addWorkingTime(WorkingTime workingTime) {
         this.workingTimes.add(workingTime);
         workingTime.setUser(this);
+        workingTime.setProject(workingTime.getProject());
     }
 
     public void removeWorkingTime(WorkingTime workingTime) {
         this.workingTimes.remove(workingTime);
         workingTime.setUser(null);
+        workingTime.setProject(null);
     }
 }

@@ -31,7 +31,7 @@ public class WorkingTimeService {
     }
 
     // TODO: validation of time period overlapping
-    public void addWorkingTimeToUser(WorkingTimeCreateForm createForm) {
+    public WorkingTimeDto addWorkingTimeToUser(WorkingTimeCreateForm createForm) {
         User user = userService.findUserByLogin(createForm.getUserLogin());
         Project project = projectService.findProjectByProjectName(createForm.getProjectName());
         if (!user.getProjects().contains(project)) {
@@ -39,7 +39,9 @@ public class WorkingTimeService {
         }
         WorkingTime workingTime = new WorkingTime(createForm.getStartTime(), createForm.getEndTime(), user, project);
         user.addWorkingTime(workingTime);
+        project.getWorkingTimes().add(workingTime);
         workingTimeRepository.save(workingTime);
+        return workingTimeMapper.mapWorkingTimeToWorkingTimeDto(workingTime);
     }
 
     public List<WorkingTimeDto> readAllWorkingTimes(String login) {
@@ -61,6 +63,7 @@ public class WorkingTimeService {
         WorkingTime toDelete = workingTimeRepository.findByUuid(uuid)
                 .orElseThrow(() -> new NotFoundException("provided working time uuid not found"));
         User user = toDelete.getUser();
+        toDelete.getProject().getWorkingTimes().remove(toDelete);
         user.removeWorkingTime(toDelete);
         workingTimeRepository.delete(toDelete);
     }

@@ -10,6 +10,9 @@ import pl.cekus.antologicproject.model.Project;
 import java.util.*;
 
 public class ProjectRepositoryStub implements ProjectRepository {
+
+    private List<Project> preparedProjectsList = new ArrayList<>();
+
     @Override
     public Optional<Project> findByProjectName(String projectName) {
         return preparedProjectsList.stream()
@@ -34,7 +37,8 @@ public class ProjectRepositoryStub implements ProjectRepository {
     public void deleteByUuid(UUID uuid) {
         preparedProjectsList.stream()
                 .filter(project -> project.getUuid() == uuid)
-                .forEach(project -> preparedProjectsList.remove(project));
+                .findFirst()
+                .ifPresent(project -> preparedProjectsList.remove(project));
     }
 
     @Override
@@ -73,12 +77,11 @@ public class ProjectRepositoryStub implements ProjectRepository {
 
     @Override
     public void deleteAll(Iterable<? extends Project> entities) {
-        preparedProjectsList.clear();
     }
 
     @Override
     public void deleteAll() {
-
+        preparedProjectsList.clear();
     }
 
     @Override
@@ -182,6 +185,4 @@ public class ProjectRepositoryStub implements ProjectRepository {
     public long count(Specification<Project> spec) {
         return preparedProjectsList.size();
     }
-
-    private List<Project> preparedProjectsList = new ArrayList<>();
 }

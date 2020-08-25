@@ -36,7 +36,7 @@ public class Project extends AbstractEntity {
     private Set<User> users = new HashSet<>();
 
     @OneToMany(mappedBy = "project", cascade = CascadeType.ALL, orphanRemoval = true)
-    private Set<WorkingTime> workingTimes;
+    private Set<WorkingTime> workingTimes = new HashSet<>();
 
     public Project(String projectName, String description, LocalDate startDate, LocalDate endDate, BigDecimal budget) {
         this.projectName = projectName;

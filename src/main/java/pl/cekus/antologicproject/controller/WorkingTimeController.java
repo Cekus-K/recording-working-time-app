@@ -23,8 +23,8 @@ class WorkingTimeController extends ResponseEntityExceptionHandler {
 
     @ResponseStatus(HttpStatus.CREATED)
     @PostMapping("/working-times")
-    void addWorkingTime(@RequestBody WorkingTimeCreateForm workingTimeCreateForm) {
-        workingTimeService.addWorkingTimeToUser(workingTimeCreateForm);
+    WorkingTimeDto addWorkingTime(@RequestBody WorkingTimeCreateForm workingTimeCreateForm) {
+        return workingTimeService.addWorkingTimeToUser(workingTimeCreateForm);
     }
 
     @GetMapping("/working-times")

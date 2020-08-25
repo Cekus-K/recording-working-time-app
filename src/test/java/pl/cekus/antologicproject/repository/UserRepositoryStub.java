@@ -7,6 +7,9 @@ import pl.cekus.antologicproject.model.User;
 import java.util.*;
 
 public class UserRepositoryStub implements UserRepository {
+
+    private List<User> preparedUsersList = new ArrayList<>();
+
     @Override
     public Optional<User> findByLogin(String login) {
         return preparedUsersList.stream()
@@ -93,7 +96,6 @@ public class UserRepositoryStub implements UserRepository {
 
     @Override
     public <S extends User> List<S> saveAll(Iterable<S> entities) {
-        preparedUsersList.addAll((Collection<? extends User>) entities);
         return null;
     }
 
@@ -188,6 +190,4 @@ public class UserRepositoryStub implements UserRepository {
     public long count(Specification<User> spec) {
         return 0;
     }
-
-    private List<User> preparedUsersList = new ArrayList<>();
 }

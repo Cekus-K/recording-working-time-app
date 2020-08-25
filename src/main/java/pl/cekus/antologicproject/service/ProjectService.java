@@ -97,10 +97,11 @@ public class ProjectService {
     public void deleteProject(UUID uuid) {
         Project toDelete = readProjectByUuid(uuid)
                 .orElseThrow(() -> new NotFoundException("provided project uuid not found"));
-        toDelete.getUsers()
+        List<String> users = toDelete.getUsers()
                 .stream()
                 .map(User::getLogin)
-                .forEach((login) -> removeEmployeeFromProject(login, toDelete.getProjectName()));
+                .collect(Collectors.toList());
+        users.forEach(user -> removeEmployeeFromProject(user, toDelete.getProjectName()));
         projectRepository.deleteByUuid(uuid);
     }
 

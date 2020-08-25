@@ -1,5 +1,6 @@
 package pl.cekus.antologicproject.model;
 
+import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
