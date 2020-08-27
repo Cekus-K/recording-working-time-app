@@ -15,7 +15,7 @@ public interface ProjectRepository extends JpaRepository<Project, Long>, JpaSpec
 
     @Query("select p from Project p " +
             "left join fetch p.users u " +
-            "left join fetch u.workingTimes wt " +
+            "left join fetch p.workingTimes wt " +
             "where p.projectName = :projectName")
     Optional<Project> findByProjectName(@Param("projectName") String projectName);
 

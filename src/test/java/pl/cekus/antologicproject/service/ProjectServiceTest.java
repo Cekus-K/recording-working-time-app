@@ -3,7 +3,6 @@ package pl.cekus.antologicproject.service;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
-import org.mockito.Mock;
 import pl.cekus.antologicproject.dto.ProjectDto;
 import pl.cekus.antologicproject.dto.UserDto;
 import pl.cekus.antologicproject.exception.IllegalParameterException;
@@ -16,7 +15,6 @@ import pl.cekus.antologicproject.mapper.ProjectMapperImpl;
 import pl.cekus.antologicproject.mapper.UserMapper;
 import pl.cekus.antologicproject.mapper.UserMapperImpl;
 import pl.cekus.antologicproject.model.Project;
-import pl.cekus.antologicproject.model.ProjectView;
 import pl.cekus.antologicproject.model.Role;
 import pl.cekus.antologicproject.model.User;
 import pl.cekus.antologicproject.repository.*;
@@ -27,13 +25,13 @@ import java.util.Optional;
 import java.util.UUID;
 
 import static org.assertj.core.api.Assertions.assertThat;
-import static org.junit.jupiter.api.Assertions.*;
+import static org.junit.jupiter.api.Assertions.assertAll;
+import static org.junit.jupiter.api.Assertions.assertThrows;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.BDDMockito.given;
 import static org.mockito.Mockito.*;
 
 class ProjectServiceTest {
-
 
     private UserMapper userMapper = new UserMapperImpl();
     private ProjectMapper projectMapper = new ProjectMapperImpl();
