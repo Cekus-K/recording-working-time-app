@@ -1,6 +1,6 @@
-Java, Spring, PostgreSQL, Gradle, JUnit5, Mockito2
+## Java, Spring, PostgreSQL, Gradle, JUnit5, Mockito2
 
-1 . USER STORIES USERS:
+### 1. USER STORIES USERS:
 
 a) As an administrator, I can create a user.
 
@@ -20,7 +20,7 @@ d) As an administrator, I can view the user table
 
 e) As an administrator, I can filter the user table (login, first and last name, cost from-to, user type).
 
-2 . USER STORIES PROJECTS:
+### 2. USER STORIES PROJECTS:
 
 a) As a manager, I can create a project
 
@@ -46,7 +46,7 @@ g) As a manager, I can filter out projects:
 - Selecting several users from the list.
 - Budget exceeded Yes / No
 
-3 . ENTERING THE RECORDS:
+### 3. ENTERING THE RECORDS:
 
 a) As a user, I can enter timesheets:
 
@@ -60,7 +60,7 @@ c) As a user, I can delete specific timesheets
 
 d) As a user, I can edit specific timesheets
 
-4 . REPORTS:
+### 4. REPORTS:
 
 a) As a manager, I can view user data in the time range (from the beginning, from the year, from the month and from the week). The returned data is to contain information about the total cost of the employee from a given period, projects in which he participated and a summary of how much time he spent in a specific project and what was the cost of his work
 
